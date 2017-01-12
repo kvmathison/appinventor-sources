@@ -648,6 +648,14 @@ Blockly.Blocks['controls_closeScreen'] = {
     this.setPreviousStatement(true);
     this.setTooltip(Blockly.Msg.LANG_CONTROLS_CLOSE_SCREEN_TOOLTIP);
   },
+  jsBlockInfo:{
+    scope:"GLOBAL",
+    methodName:"closeScreen",
+    textParameters: []
+  },
+  getParameters: function() {
+    return [];
+  },
   typeblock: [{translatedName: Blockly.Msg.LANG_CONTROLS_CLOSE_SCREEN_TITLE}]
 };
 

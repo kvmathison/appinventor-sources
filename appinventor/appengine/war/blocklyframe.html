@@ -5,6 +5,18 @@
 <html>
   <head>
     <script type="text/javascript" src="closure-library/closure/goog/base.js"></script>
+
+    <!-- added files for blocks to text -->    
+    <script src="acorn.js"></script>
+    <script src="aceEditor/ace.js"></script>
+    <script src="aceEditor/mode-javascript.js"></script>
+    <script src="aceEditor/mode-gameblox.js"></script>
+    <script src="aceEditor/theme-textmate.js"></script>
+    <script src="aceEditor/worker-javascript.js"></script>
+    <script src="aceEditor/ext-language_tools.js"></script>
+    <script src="aceEditor/snippets/javascript.js"></script>
+    <script src="aceEditor/beautify.js"></script>
+
     <link type="text/css" rel="stylesheet" href="media/blockly.css">
     <link type="text/css" rel="stylesheet" href="closure-library/closure/goog/css/dialog.css">
     <script type="text/javascript" src="blockly-@GUID@.js"></script>
@@ -17,7 +29,7 @@
       overflow: hidden;
     }
     .blocklySvg {
-      height: 100%;
+      height: 50%;
       width: 100%;
     }
     .ac-renderer {
@@ -73,14 +85,40 @@
         Blockly.ComponentTypes.populateTypes(top.location.hash.substr(1));
         window.parent.BlocklyPanel_initBlocksArea(formName);
         window.parent.BlocklyPanel_checkWarningState(formName);
+        
+        //test
+        /*
+        bd.ace.ctr.editor.setValue(bd.acorn.ctr.populateTextEditor());
+        bd.ace.ctr.editor.setValue(bd.ace.ctr.beautify(bd.ace.ctr.editor.session.getValue()));
+        */
       }
     </script>
   </head>
   <body id="ai_frame" onload="init()">
+
     <div id="ai_type_block" style="display:none">
       <p>
         <input id="ac_input_text" />
       </p>
     </div>
+
+    <!-- ace text editor 
+    <div id="aceTextEditorCell" style="width:100%;height:calc(20% - 80px);background-color:white;">  
+      <div id="aceTextEditorContainer" style="margin-top:25px;width:100%;height:100%;">
+      </div>
+    </div>
+    <div id="jsEditor" style="display:none;">{% if jsEditor %}{{ jsEditor }}{% endif %}</div> -->
+    
+    <div id="editor" style="width: 100%;height:50%"></div>
+        
+    <script src="/aceEditor/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script>
+        var editor = ace.edit("editor");
+        editor.setTheme("ace/theme/textmate");
+        editor.getSession().setMode("ace/mode/gameblox");
+    </script> 
+    <script type="text/javascript" src="/acornController.js">
+      
+    </script>
   </body>
 </html>
