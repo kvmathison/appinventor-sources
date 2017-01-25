@@ -25,6 +25,20 @@ Blockly.Blocks['math_number'] = {
     this.setOutput(true, Blockly.Blocks.Utilities.YailTypeToBlocklyType("number", Blockly.Blocks.Utilities.OUTPUT));
     this.setTooltip(Blockly.Msg.LANG_MATH_NUMBER_TOOLTIP);
   },
+  getParameters: function(){
+      var params = [];
+      var v = Blockly.Blocks.math_number.validator;
+      params.push(new Blockly.ParameterText('NUM', '0', v));
+      return params;
+  },
+  jsBlockInfo: {
+    scope: "GLOBAL",
+    methodName: "math_number",
+    textParameters: ["NUM"],
+    blockToText: function(block) {
+      return block.getFieldValue("NUM");
+    }
+  },
   typeblock: [{translatedName: Blockly.Msg.LANG_MATH_MUTATOR_ITEM_INPUT_NUMBER}]
 };
 
@@ -58,6 +72,46 @@ Blockly.Blocks['math_compare'] = {
       var mode = thisBlock.getFieldValue('OP');
       return Blockly.Blocks.math_compare.TOOLTIPS()[mode];
     });
+  },
+  getParameters: function(){
+    var params = []
+    var OPERATORS =
+      [[Blockly.Msg.LANG_MATH_COMPARE_EQ, 'EQ'],
+       [Blockly.Msg.LANG_MATH_COMPARE_NEQ, 'NEQ'],
+       [Blockly.Msg.LANG_MATH_COMPARE_LT, 'LT'],
+       [Blockly.Msg.LANG_MATH_COMPARE_LTE, 'LTE'],
+       [Blockly.Msg.LANG_MATH_COMPARE_GT, 'GT'],
+       [Blockly.Msg.LANG_MATH_COMPARE_GTE, 'GTE']];
+    params.push(new Blockly.ParameterValue('A', 'Number', null)); // todo
+    params.push(new Blockly.ParameterValue('B', 'Number', null)); // todo
+    params.push(new Blockly.ParameterDropdown('OP', OPERATORS, null));
+    return params;
+  },
+  jsBlockInfo: {
+    scope: "GLOBAL",
+    methodName: "logicCompare",
+    textParameters: ["A","B"],
+    blockToText: function(block) {
+      var operators = {
+        'EQ': "===",
+        'NEQ': "!==",
+        'LT': "<",
+        'LTE': "<=",
+        'GT': ">",
+        'GTE': ">="
+      };
+
+      var text = "";
+
+      text += "(";
+      text += bd.acorn.ctr.blockToText(block.getInputTargetBlock("A"));
+      text += operators[block.getFieldValue("OP")];
+      text += bd.acorn.ctr.blockToText(block.getInputTargetBlock("B"));
+      text += ")";
+
+      return text;
+    }
+
   },
   // Potential clash with logic equal, using '=' for now
   typeblock: [{
@@ -169,6 +223,31 @@ Blockly.Blocks['math_add'] = {
     this.repeatingInputName = 'NUM';
     this.itemCount_ = 2;
   },
+  jsBlockInfo: {
+    scope: "GLOBAL",
+    methodName: "math_add",
+    blockToText: function(block) {
+      var text = "";
+      text += "(";
+      for (var i=0; i<(block.itemCount_-1); i++) {
+        text+=bd.acorn.ctr.blockToText(block.getInputTargetBlock(block.repeatingInputName+i.toString()));
+        text+="+";
+      }
+      text+=bd.acorn.ctr.blockToText(block.getInputTargetBlock(block.repeatingInputName+(block.itemCount_-1).toString()));
+      text += ")";
+
+      return text;
+    }
+  },
+  getParameters: function(){
+    var params = [];
+    var value = new Blockly.ParameterValue('NUM0', 'Number', null); // todo
+    params.push(value);
+    var value = new Blockly.ParameterValue('NUM1', 'Number', null); // todo
+    params.push(value);
+    return params;
+  },
+  textParameters: ["NUM0", "NUM1"],
   mutationToDom: Blockly.mutationToDom,
   domToMutation: Blockly.domToMutation,
   decompose: function (workspace) {
@@ -223,6 +302,30 @@ Blockly.Blocks['math_subtract'] = {
     // Assign 'this' to a variable for use in the tooltip closure below.
     this.setTooltip(Blockly.Msg.LANG_MATH_ARITHMETIC_TOOLTIP_MINUS);
   },
+  jsBlockInfo: {
+    scope: "GLOBAL",
+    methodName: "math_subtract",
+    blockToText: function(block) {
+      var text = "";
+
+      text += "(";
+      text += bd.acorn.ctr.blockToText(block.getInputTargetBlock("A"));
+      text += "-";
+      text += bd.acorn.ctr.blockToText(block.getInputTargetBlock("B"));
+      text += ")";
+
+      return text;
+    }
+  },
+  getParameters: function(){
+    var params = [];
+    var value = new Blockly.ParameterValue('A', 'Number', null); // todo
+    params.push(value);
+    var value = new Blockly.ParameterValue('B', 'Number', null); // todo
+    params.push(value);
+    return params;
+  },
+  textParameters: ["A", "B"],
   typeblock: [{translatedName: Blockly.Msg.LANG_MATH_ARITHMETIC_MINUS}]
 };
 
@@ -249,6 +352,31 @@ Blockly.Blocks['math_multiply'] = {
     this.repeatingInputName = 'NUM';
     this.itemCount_ = 2;
   },
+  jsBlockInfo: {
+    scope: "GLOBAL",
+    methodName: "math_multiply",
+    blockToText: function(block) {
+      var text = "";
+      text += "(";
+      for (var i=0; i<(block.itemCount_-1); i++) {
+        text+=bd.acorn.ctr.blockToText(block.getInputTargetBlock(block.repeatingInputName+i.toString()));
+        text+="*";
+      }
+      text+=bd.acorn.ctr.blockToText(block.getInputTargetBlock(block.repeatingInputName+(block.itemCount_-1).toString()));
+      text += ")";
+
+      return text;
+    }
+  },
+  getParameters: function(){
+    var params = [];
+    var value = new Blockly.ParameterValue('NUM0', 'Number', null); // todo
+    params.push(value);
+    var value = new Blockly.ParameterValue('NUM1', 'Number', null); // todo
+    params.push(value);
+    return params;
+  },
+  textParameters: ["NUM0", "NUM1"],
   mutationToDom: Blockly.mutationToDom,
   domToMutation: Blockly.domToMutation,
   decompose: function (workspace) {
@@ -289,6 +417,30 @@ Blockly.Blocks['math_division'] = {
     // Assign 'this' to a variable for use in the tooltip closure below.
     this.setTooltip(Blockly.Msg.LANG_MATH_ARITHMETIC_TOOLTIP_DIVIDE);
   },
+  jsBlockInfo: {
+    scope: "GLOBAL",
+    methodName: "math_division",
+    blockToText: function(block) {
+      var text = "";
+
+      text += "(";
+      text += bd.acorn.ctr.blockToText(block.getInputTargetBlock("A"));
+      text += "/";
+      text += bd.acorn.ctr.blockToText(block.getInputTargetBlock("B"));
+      text += ")";
+
+      return text;
+    }
+  },
+  getParameters: function(){
+    var params = [];
+    var value = new Blockly.ParameterValue('A', 'Number', null); // todo
+    params.push(value);
+    var value = new Blockly.ParameterValue('B', 'Number', null); // todo
+    params.push(value);
+    return params;
+  },
+  textParameters: ["A", "B"],
   typeblock: [{translatedName: Blockly.Msg.LANG_MATH_ARITHMETIC_DIVIDE}]
 };
 
@@ -309,6 +461,30 @@ Blockly.Blocks['math_power'] = {
     var thisBlock = this;
     this.setTooltip(Blockly.Msg.LANG_MATH_ARITHMETIC_TOOLTIP_POWER);
   },
+  jsBlockInfo: {
+    scope: "GLOBAL",
+    methodName: "math_power",
+    blockToText: function(block) {
+      var text = "";
+
+      text += "(";
+      text += bd.acorn.ctr.blockToText(block.getInputTargetBlock("A"));
+      text += "^";
+      text += bd.acorn.ctr.blockToText(block.getInputTargetBlock("B"));
+      text += ")";
+
+      return text;
+    }
+  },
+  getParameters: function(){
+    var params = [];
+    var value = new Blockly.ParameterValue('A', 'Number', null); // todo
+    params.push(value);
+    var value = new Blockly.ParameterValue('B', 'Number', null); // todo
+    params.push(value);
+    return params;
+  },
+  textParameters: ["A", "B"],
   typeblock: [{translatedName: Blockly.Msg.LANG_MATH_ARITHMETIC_POWER}]
 };
 
@@ -335,6 +511,17 @@ Blockly.Blocks['math_random_int'] = {
     this.setInputsInline(true);
     this.setTooltip(Blockly.Msg.LANG_MATH_RANDOM_INT_TOOLTIP);
   },
+  getParameters: function(){
+    var params = []
+    params.push(new Blockly.ParameterValue('FROM', 'Number', null)); // todo
+    params.push(new Blockly.ParameterValue('TO', 'Number', null)); // todo
+    return params;
+  },
+  jsBlockInfo: {
+    scope: "GLOBAL",
+    methodName: "randomInt",
+    textParameters: ["FROM","TO"],
+  },
   typeblock: [{translatedName: Blockly.Msg.LANG_MATH_RANDOM_INT_TITLE_RANDOM}]
 };
 
@@ -348,6 +535,15 @@ Blockly.Blocks['math_random_float'] = {
     this.appendDummyInput()
         .appendField(Blockly.Msg.LANG_MATH_RANDOM_FLOAT_TITLE_RANDOM);
     this.setTooltip(Blockly.Msg.LANG_MATH_RANDOM_FLOAT_TOOLTIP);
+  },
+  getParameters: function(){
+    var params = []
+    return params;
+  },
+  jsBlockInfo: {
+    scope: "GLOBAL",
+    methodName: "random",
+    textParameters: [],
   },
   typeblock: [{translatedName: Blockly.Msg.LANG_MATH_RANDOM_FLOAT_TITLE_RANDOM}]
 };
@@ -366,6 +562,16 @@ Blockly.Blocks['math_random_set_seed'] = {
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setTooltip(Blockly.Msg.LANG_MATH_RANDOM_SEED_TOOLTIP);
+  },
+  getParameters: function(){
+    var params = []
+    params.push(new Blockly.ParameterValue('NUM', 'Number', null)); // todo
+    return params;
+  },
+  jsBlockInfo: {
+    scope: "GLOBAL",
+    methodName: "randomSetSeed",
+    textParameters: ["NUM"],
   },
   typeblock: [{translatedName: Blockly.Msg.LANG_MATH_RANDOM_SEED_TITLE_RANDOM}]
 };
@@ -472,6 +678,37 @@ Blockly.Blocks['math_single'] = {
       var mode = thisBlock.getFieldValue('OP');
       return Blockly.Blocks.math_single.TOOLTIPS()[mode];
     });
+  },
+  getParameters: function(){
+    var params = [];
+    var OPERATORS =
+        [[Blockly.Msg.MATH_SINGLE_OP_ROOT, 'ROOT'],
+        [Blockly.Msg.MATH_SINGLE_OP_ABSOLUTE, 'ABS'],
+        ['-', 'NEG'],
+        ['ln', 'LN'],
+        ['e^', 'EXP'],
+        [Blockly.Msg.MATH_ROUND_OPERATOR_ROUND, 'ROUND'],
+        [Blockly.Msg.LANG_MATH_ROUND_OPERATOR_CEILING, 'CEILING'],
+        [Blockly.Msg.LANG_MATH_ROUND_OPERATOR_FLOOR, 'FLOOR']];
+
+    var op = new Blockly.ParameterDropdown('OP',OPERATORS, null);
+    params.push(op);
+    var num = new Blockly.ParameterValue('NUM', 'Number', null);
+    params.push(num);
+    return params
+  },
+  jsBlockInfo: {
+    scope: "GLOBAL",
+    methodName: ["sqrt", "abs", "neg", "ln", "exp", "round", "ceil", "floor"],
+    textParameters: ["NUM"],
+    methodNameToBlockValues: {"sqrt":{fieldNameToValue: {"OP":"ROOT"}},
+      "abs":{fieldNameToValue: {"OP":"ABS"}},
+      "neg":{fieldNameToValue: {"OP":"NEG"}},
+      "ln":{fieldNameToValue: {"OP":"LN"}},
+      "exp":{fieldNameToValue: {"OP":"EXP"}},
+      "round":{fieldNameToValue: {"OP":"ROUND"}},
+      "ceil":{fieldNameToValue: {"OP":"CEILING"}},
+      "floor":{fieldNameToValue: {"OP":"FLOOR"}}}
   },
   typeblock: [{
     translatedName: Blockly.Msg.LANG_MATH_SINGLE_OP_ROOT,

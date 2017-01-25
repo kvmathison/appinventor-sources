@@ -39,6 +39,17 @@
     <!-- don't serve the whitelist as a static file! -->
     <exclude path="/whitelist" />
 
+    <!-- blocks to text files -->
+    <include path="/aceEditor/*" expiration="365d" />
+    <include path="acornController.js" expiration="365d" />
+    <include path="acorn.js" expiration="365d" />
+    <include path="/aceEditor/*" expiration="365d" />
+    <include path="/aceEditor/snippets/*" expiration="365d" />
+    <include path="aceController.js" expiration="365d" />
+    <include path="contentController.js" expiration="365d" />
+    <include path="messages.js" expiration="365d" />
+    <include path="toolboxController.js" expiration="365d" />
+
   </static-files>
 
   <!-- Permit sessions for location authentication -->

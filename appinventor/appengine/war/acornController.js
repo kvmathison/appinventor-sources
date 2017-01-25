@@ -1,5 +1,6 @@
 goog.provide('bd.acorn.ctr');
 
+bd.acorn.ctr.isGameblox = false;
 bd.acorn.ctr.blockTypesLoaded = false;
 
 var functionNameToBlockName =   {"random":"math_random_int",                //random(1,5)
@@ -34,12 +35,33 @@ var keyMappings = {
 	"Players.ALL_PLAYERS_EXCEPT_CALLER":"ALL_PLAYERS_NO_CALLER"
 };
 
+
+/**
+ * replacement for getCurrentBlockly - here for gameblox compatibility
+ */
+bd.acorn.ctr.getCurrentBlockly = function() {
+    var Blockly = (window.Blockly ? window.Blockly : bd.script.ctr.getCurrentBlockly());
+    //Blockly.window = window //TODO: remove - here for gameblox compatibility
+    return Blockly
+};
+
+// replacement for bd.util functions TODO: remove, not necessary for AI
+bd.acorn.removePrefix = function(stringWithPrefix,prefix){
+    return stringWithPrefix.replace(prefix + ":","")
+}
+
+bd.acorn.containsPrefix = function(stringWithPrefix,prefix){
+    return (stringWithPrefix + "").substr(0,prefix.length) == prefix;
+}
+
+
 /**
  * loads all blocks in Blockly.Blocks namespace to the functionNameToBlockName dictionary that contain jsBlockInfo's
  */
 bd.acorn.ctr.loadBlockTypes = function() {
     if (!bd.acorn.ctr.blockTypesLoaded) {
-        var Blockly = bd.script.ctr.getCurrentBlockly();
+        var Blockly = bd.acorn.ctr.getCurrentBlockly();
+        Blockly.window = window // TODO: remove - here for gameblox compatibility
         for (var blockType in Blockly.Blocks) {
             if (Blockly.Blocks[blockType].jsBlockInfo) {
                 if(Blockly.Blocks[blockType].jsBlockInfo.methodName instanceof Blockly.window.Array){
@@ -75,7 +97,7 @@ in which case, I might as well just start with the transformation of my code fro
 bd.acorn.ctr.findAllBlocksWithJSBlockInfo = function() {
     var outputList = [];
 
-    var Blockly = bd.script.ctr.getCurrentBlockly();
+    var Blockly = bd.acorn.ctr.getCurrentBlockly();
     for (var blockType in Blockly.Blocks) {
         if (Blockly.Blocks[blockType].jsBlockInfo) {
 
@@ -128,7 +150,7 @@ bd.acorn.ctr.thing = function() {
  * @return {string} text that represents all the blocks in the workspace in gamebloxJS format
  */
 bd.acorn.ctr.populateTextEditor = function() {
-	var blockly = bd.script.ctr.getCurrentBlockly();
+	var blockly = bd.acorn.ctr.getCurrentBlockly();
 	var text = "";
 	var listOfTopBlocks = blockly.mainWorkspace.getTopBlocks();
 	for (var x = 0; x < listOfTopBlocks.length; x++) {
@@ -168,9 +190,9 @@ bd.acorn.ctr.createBlock = function(text){
     var tree = bd.acorn.ctr.createTree(text);
     var treeObject = bd.toolbox.ctr.blockInfoToBlockObject(tree);
     var treeXML = bd.toolbox.ctr.blockObjectToXML(treeObject);
-    var blockly = bd.script.ctr.getCurrentBlockly();
+    var blockly = bd.acorn.ctr.getCurrentBlockly();
     var block = blockly.Xml.domToBlock(blockly.mainWorkspace, treeXML);
-    repopulate(block);
+    //repopulate(block);
 };
 
 
@@ -182,9 +204,10 @@ bd.acorn.ctr.createXmlBlock = function(text){
 };
 
 bd.acorn.ctr.populateDOM = function(treeXML) {
-	var blockly = bd.script.ctr.getCurrentBlockly();
+	var blockly = bd.acorn.ctr.getCurrentBlockly();
     blockly.Xml.domToWorkspace(blockly.mainWorkspace, treeXML);
 
+    //update all titles on script page
     bd.component.lookup(bd.script.ctr.getSelectedScriptPageId()).updateAllTitles();
 };
 
@@ -266,11 +289,11 @@ bd.acorn.ctr.extractObjectName = function(block) {
         var fieldValue = block.getFieldValue(blockInfo.scope);
 
         if (fieldValue != null) {
-            if (bd.util.containsPrefix(fieldValue, "id")) {
-                var id = bd.util.removePrefix(fieldValue, "id");
+            if (bd.acorn.containsPrefix(fieldValue, "id")) {
+                var id = bd.acorn.removePrefix(fieldValue, "id");
                 objectName = bd.component.lookup(id).model.name;
-            } else if (bd.util.containsPrefix(fieldValue, "msg:")) {
-                var msgWithoutNamespace = bd.util.removePrefix(fieldValue, "msg");
+            } else if (bd.acorn.containsPrefix(fieldValue, "msg:")) {
+                var msgWithoutNamespace = bd.acorn.removePrefix(fieldValue, "msg");
                 if (bd.msg.contextVariables[msgWithoutNamespace + '_JS'] != null) {
                     objectName = bd.msg.contextVariables[msgWithoutNamespace + '_JS'];
                 } else {
@@ -370,16 +393,16 @@ bd.acorn.ctr.removeNamespaceMsgJSAndReturnText = function (block) {
 
     if (blockInfo.blockToText != null){
         var text = blockInfo.blockToText(block);
-        if (bd.util.containsPrefix(text, "msg:")) {
-             var msgWithoutNamespace = bd.util.removePrefix(text, "msg");
+        if (bd.acorn.containsPrefix(text, "msg:")) {
+             var msgWithoutNamespace = bd.acorn.removePrefix(text, "msg");
              if (bd.msg.contextVariables[msgWithoutNamespace + '_JS'] != null) {
                  text = bd.msg.contextVariables[msgWithoutNamespace + '_JS'];
              } else {
                  text = bd.msg.contextVariables[msgWithoutNamespace];
              }
         }
-        if (bd.util.containsPrefix(text, "id:")) {
-            var id = bd.util.removePrefix(text, "id");
+        if (bd.acorn.containsPrefix(text, "id:")) {
+            var id = bd.acorn.removePrefix(text, "id");
             text = bd.component.lookup(id).model.name;
         }
         return text;
@@ -668,7 +691,7 @@ bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, t
                     var argArray = [];
 
                     for (var z = 0; z < textParameters[x].length; z++) {
-                        if (bd.util.containsPrefix(textParameters[x][z], parameters[y].name)) {
+                        if (bd.acorn.containsPrefix(textParameters[x][z], parameters[y].name)) {
 
                             var fieldValue = block.getFieldValue(textParameters[x][z]);
                             if (fieldValue == null) {
@@ -677,8 +700,8 @@ bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, t
 
                             var isType = false;
                             var name;
-                            if (bd.util.containsPrefix(fieldValue, "type:")) {
-                                id = bd.util.removePrefix(fieldValue, "type");
+                            if (bd.acorn.containsPrefix(fieldValue, "type:")) {
+                                id = bd.acorn.removePrefix(fieldValue, "type");
                                 name = Variables[id];
                             } else {
                                 name = fieldValue;
@@ -711,7 +734,7 @@ bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, t
                     var argDictionary = {};
 
                     for (var key in textParameters[x]) {
-                        if (bd.util.containsPrefix(key, parameters[y].name)) {
+                        if (bd.acorn.containsPrefix(key, parameters[y].name)) {
                             var keyFieldValue = block.getFieldValue(key);
                             if (keyFieldValue == null) {
                                 keyFieldValue = bd.acorn.ctr.blockToText(block.getInputTargetBlock(key));
@@ -719,8 +742,8 @@ bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, t
 
                             var isType = false;
                             var name;
-                            if (bd.util.containsPrefix(keyFieldValue, "type:")) {
-                                id = bd.util.removePrefix(keyFieldValue, "type");
+                            if (bd.acorn.containsPrefix(keyFieldValue, "type:")) {
+                                id = bd.acorn.removePrefix(keyFieldValue, "type");
                                 name = Variables[id];
                             } else {
                                 name = keyFieldValue;
@@ -747,7 +770,7 @@ bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, t
             var regex = new RegExp(stringToGoIntoTheRegex + "\\d+");
 
             if (textParameters[x].match(regex) != null || textParameters[x] === parameters[y].name || textParameters[x] === "NEXT_BLOCK") {
-            // if (bd.util.containsPrefix(textParameters[x], parameters[y].name) || textParameters[x] === "NEXT_BLOCK") {
+            // if (bd.acorn.containsPrefix(textParameters[x], parameters[y].name) || textParameters[x] === "NEXT_BLOCK") {
 
                 var hasLocalNestedMethod = false;
                 var methodNameToAdd, numberOfMethodsToAdd = 0;
@@ -781,11 +804,11 @@ bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, t
 
                         var isType = false, isID = false;
                         var flippedDictionaryOfKeyMappings = {};
-                        if (bd.util.containsPrefix(fieldValue, "id:")) {
-                            id = bd.util.removePrefix(fieldValue, "id");
+                        if (bd.acorn.containsPrefix(fieldValue, "id:")) {
+                            id = bd.acorn.removePrefix(fieldValue, "id");
                             isID = true;
-                        } else if (bd.util.containsPrefix(fieldValue, "type:")) {
-                            id = bd.util.removePrefix(fieldValue, "type");
+                        } else if (bd.acorn.containsPrefix(fieldValue, "type:")) {
+                            id = bd.acorn.removePrefix(fieldValue, "type");
                             isType = true;
                         } else {
                             id = fieldValue;
@@ -851,16 +874,16 @@ bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, t
 
                     var number = block.getFieldValue(textParameters[x]);
 
-                    if (bd.util.containsPrefix(number, "msg:")) {
-                        var msgWithoutNamespace = bd.util.removePrefix(number, "msg");
+                    if (bd.acorn.containsPrefix(number, "msg:")) {
+                        var msgWithoutNamespace = bd.acorn.removePrefix(number, "msg");
                         if (bd.msg.contextVariables[msgWithoutNamespace + '_JS'] != null) {
                             number = bd.msg.contextVariables[msgWithoutNamespace + '_JS'];
                         } else {
                             number = bd.msg.contextVariables[msgWithoutNamespace];
                         }
                         name = number;
-                    } else if (bd.util.containsPrefix(number, "id:")) {
-                        var id = bd.util.removePrefix(number, "id");
+                    } else if (bd.acorn.containsPrefix(number, "id:")) {
+                        var id = bd.acorn.removePrefix(number, "id");
                         number = bd.component.lookup(id).model.name;
                         name = number;
                     } else {
@@ -1147,120 +1170,6 @@ bd.acorn.ctr.isCallback = function(input, callbackParameters){
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /**
  *
  */
@@ -1350,7 +1259,8 @@ bd.acorn.ctr.createTree = function(text) {
 		if (expState.type == "ExpressionStatement") {
 			expressionNode = expState.expression;
 		}
-	} else {
+	} 
+    else {
 		if (tree.type == "ExpressionStatement") {
 			expressionNode = tree.expression;
             argumentsNode = expressionNode.arguments;
@@ -1359,6 +1269,7 @@ bd.acorn.ctr.createTree = function(text) {
 			expressionNode = tree;
 		}
 	}
+
 	if (expressionNode != null) {
 		if (expressionNode.type == "CallExpression") {
 		    argumentsNode = expressionNode.arguments;
@@ -1427,7 +1338,8 @@ bd.acorn.ctr.createTree = function(text) {
 	            elseifNum = (number - 1) / 2;
 	        }
 	    }
-	} else if (expState.type == "IfStatement") {
+	}
+    else if (expState.type == "IfStatement") {
         args = ifStatement(expState);
         functionName = "if";
         isIfStatement = true;
@@ -1478,7 +1390,7 @@ bd.acorn.ctr.createTree = function(text) {
     }
 
 
-    Blockly = bd.script.ctr.getCurrentBlockly();
+    Blockly = bd.acorn.ctr.getCurrentBlockly();
 
     var hasNextBlock = false;
     var nesting = 0;
@@ -2479,7 +2391,7 @@ function comparisonOperator(expressionNode) {
     functionName = 'logicCompare';
     block = { type: functionNameToBlockName[functionName] };
 
-    Blockly = bd.script.ctr.getCurrentBlockly();
+    Blockly = bd.acorn.ctr.getCurrentBlockly();
     parameters = Blockly.Blocks[block.type].jsBlockInfo.textParameters;
 
     operation = comparisonOperators[expressionNode.operator];
@@ -2583,7 +2495,7 @@ function operationOperator(expressionNode) {
     functionName = 'logicOperation';
     block = { type: functionNameToBlockName[functionName] };
 
-    Blockly = bd.script.ctr.getCurrentBlockly();
+    Blockly = bd.acorn.ctr.getCurrentBlockly();
     parameters = Blockly.Blocks[block.type].jsBlockInfo.textParameters;
 
     operation = operationOperators[expressionNode.operator];
@@ -2634,6 +2546,7 @@ function operationOperator(expressionNode) {
  */
 function mathOperator(expressionNode) {
     var Operators = {"+":"ADD", "-":"MINUS", "*":"MULTIPLY", "/":"DIVIDE", "^":"POWER", "%":"MOD"};
+    var operatorToBlockName = {"+":"math_add", "-":"math_subtract", "*":"math_multiply", "/":"math_division", "^":"math_power", "%":"math_mod"};
     var hasLeftNested = false, hasRightNested = false;
 
     var leftNode = expressionNode.left;
@@ -2671,14 +2584,21 @@ function mathOperator(expressionNode) {
     args.push(rightNode);
 
     // BinaryExpression is currently only used for arithmetic so this is a bit hardcoded
-    functionName = 'arithmetic';
-    block = { type: functionNameToBlockName[functionName] };
+    if (bd.acorn.ctr.isGameblox) {
+        functionName = 'arithmetic';
+        block = { type: functionNameToBlockName[functionName] };
+    }
+    else {
+        block = { type: operatorToBlockName[expressionNode.operator]}
+    }
 
-    Blockly = bd.script.ctr.getCurrentBlockly();
+    Blockly = bd.acorn.ctr.getCurrentBlockly();
     parameters = Blockly.Blocks[block.type].textParameters;
 
-    operation = Operators[expressionNode.operator];
-    block["fieldNameToValue"] = { "OP": operation };
+    if (bd.acorn.ctr.isGameblox) {
+        operation = Operators[expressionNode.operator];
+        block["fieldNameToValue"] = { "OP": operation };
+    }
 
     block["input"] = {};
     input = block.input;
@@ -2725,7 +2645,7 @@ function typeOfInput(name, block, blockInfo){
     var param = blockInfo.getParameters();
 
     for (var x = 0; x < param.length; x++) {
-        if (bd.util.containsPrefix(name, param[x].name)) { //param[x].name === name
+        if (bd.acorn.containsPrefix(name, param[x].name)) { //param[x].name === name
             if (param[x].type == block.Parameter.Types.STATEMENT)
                 type = "statement";
             if (param[x].type == block.Parameter.Types.VALUE)

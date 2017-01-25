@@ -31,6 +31,7 @@ goog.require('goog.asserts');
  * Blocks.addTemplate().
  */
 goog.provide('Blockly.Blocks');
+goog.require('Blockly.Parameter');
 
 /**
  * Create a block template and add it as a field to Blockly.Blocks with the
