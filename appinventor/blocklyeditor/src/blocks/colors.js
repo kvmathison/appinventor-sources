@@ -186,7 +186,8 @@ Blockly.Blocks['color_dark_gray'] = {
 
 Blockly.Blocks['color_make_color'] = {
   category: "Colors",
-  helpUrl: Blockly.Msg.LANG_COLOUR_MAKE_COLOUR_HELPURL,
+  //helpUrl: Blockly.Msg.LANG_COLOUR_MAKE_COLOUR_HELPURL,
+  /*
   init: function() {
     this.setColour(Blockly.COLOR_CATEGORY_HUE);
     this.appendValueInput('COLORLIST')
@@ -196,6 +197,31 @@ Blockly.Blocks['color_make_color'] = {
     this.setTooltip(Blockly.Msg.LANG_COLOUR_MAKE_COLOUR_TOOLTIP);
   },
   typeblock: [{ translatedName: Blockly.Msg.LANG_COLOUR_MAKE_COLOUR }]
+  */
+  jsonObject: {
+    "type": "color_make_color",
+    "message0": "make color %1",
+    "args0": [
+      {
+        "type": "input_value",
+        "name": "COLORLIST",
+        "check": "Array"
+      }
+    ],
+    "output": "Number",
+    "category": "Colors",
+    "colour": Blockly.COLOR_CATEGORY_HUE,
+    "tooltip": Blockly.Msg.LANG_COLOUR_MAKE_COLOUR_TOOLTIP,
+    "helpUrl": Blockly.Msg.LANG_COLOUR_MAKE_COLOUR_HELPURL
+  },
+  init: function() {
+    this.jsonInit(this.jsonObject);
+  }/*,
+  jsBlockInfo: {
+    scope: "GLOBAL",
+    methodName: "makeColor",
+    textParameters: ["COLORLIST"]
+  }*/
 };
 
 Blockly.Blocks['color_split_color'] = {
