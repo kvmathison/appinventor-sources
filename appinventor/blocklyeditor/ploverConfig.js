@@ -117,6 +117,12 @@
     "./src/warning.js",
     "./src/parameter.js",
 
+    // block to text
+    "./src/acorn.js",
+    "./src/acornController.js",
+    "./src/messages.js",
+    "./src/toolboxController.js",
+
     // Dialog Utiltiy
     "./src/util.js",
 

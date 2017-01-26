@@ -56,7 +56,7 @@ public class BlocklyPanel extends HTMLPanel {
 		   "for(var ns in window.goog.implicitNamespaces_) {\n" +
 		   "  if(ns.indexOf('.') !== false) ns = ns.split('.')[0];\n" +
 		   "  top[ns] = window.goog.global[ns];\n" +
-		   "}\nwindow['Blockly'] = top['Blockly'];")
+		   "}\nwindow['Blockly'] = top['Blockly'];window['acorn'] = top['acorn'];")
     public void initBlockly();
   }
 
