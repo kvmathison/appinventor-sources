@@ -850,4 +850,9 @@ public final class YaFormEditor extends SimpleEditor implements FormChangeListen
   public void setProperty(String uuid, String property, String value) {
     // TODO(ewpatton): Implementation
   }
+
+  @Override
+  public void moveComponent(String uuid, String parentUuid, int index) {
+    // TODO(ewpatton): Implementation
+  }
 }

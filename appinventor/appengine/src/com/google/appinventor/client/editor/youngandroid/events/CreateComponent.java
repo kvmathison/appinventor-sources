@@ -17,7 +17,7 @@ public class CreateComponent extends JavaScriptObject implements DesignerEvent {
   }-*/;
 
   static native CreateComponent create(long projectId, String uuid, String componentType)/*-{
-    return new AppInventor.Events.CreateComponent(
+    return new AI.Events.CreateComponent();
   }-*/;
 
   @Override

@@ -463,8 +463,12 @@ Blockly.WorkspaceSvg.prototype.buildComponentMap = function(warnings, errors, fo
 Blockly.WorkspaceSvg.prototype.resize = (function(resize) {
   return function() {
     resize.call(this);
-    this.warningIndicator_.position_();
-    this.backpack_.position_();
+    if (this.warningIndicator_ && this.warningIndicator_.position_) {
+      this.warningIndicator_.position_();
+    }
+    if (this.backpack_ && this.backpack_.position_) {
+      this.backpack_.position_();
+    }
     return this;
   };
 })(Blockly.WorkspaceSvg.prototype.resize);
@@ -693,20 +697,29 @@ Blockly.WorkspaceSvg.prototype.hasBackpack = function() {
 Blockly.WorkspaceSvg.prototype.onMouseWheel_ = function(e) {
   Blockly.terminateDrag_();
   if (e.eventPhase == 3) {
-
-  }
-  console.log("state = " + e.eventPhase);
-  console.log("deltaX = " + e.deltaX);
-  console.log("deltaY = " + e.deltaY);
-  console.log("ctrlKey = " + e.ctrlKey);
-  if (e.deltaY == 0) {
-    // Multi-stage wheel movement triggers jumpy zoom-in then zoom-out behavior
+    if (e.ctrlKey == true) {
+      // multi-touch pinch gesture
+      if (e.deltaY == 0) {
+        // Multi-stage wheel movement triggers jumpy zoom-in then zoom-out behavior
+        e.preventDefault();
+        return;
+      }
+      var delta = e.deltaY > 0 ? -1 : 1;
+      var position = Blockly.mouseToSvg(e, this.getParentSvg(),
+        this.getInverseScreenCTM());
+      this.zoom(position.x, position.y, delta);
+    } else {
+      // pan using mouse wheel
+      this.scrollX += e.deltaX;
+      this.scrollY += e.deltaY;
+      this.updateGridPattern_();
+      if (this.scrollbar) {
+        // can only pan if scrollbars exist
+        this.scrollbar.resize();
+      } else {
+        this.translate(this.scrollX, this.scrollY);
+      }
+    }
     e.preventDefault();
-    return;
   }
-  var delta = e.deltaY > 0 ? -1 : 1;
-  var position = Blockly.mouseToSvg(e, this.getParentSvg(),
-    this.getInverseScreenCTM());
-  this.zoom(position.x, position.y, delta);
-  e.preventDefault();
 };

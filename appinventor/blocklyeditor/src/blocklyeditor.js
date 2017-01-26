@@ -198,7 +198,7 @@ Blockly.BlocklyEditor['create'] = function(container, readOnly, rtl) {
     comments: true,
     disable: true,
     media: './media/',
-    grid: {spacing: '20', length: '5', snap: false, colour: '#ccc'},
+    grid: {spacing: '20', length: '5', snap: true, colour: '#ccc'},
     zoom: {controls: true, wheel: true, scaleSpeed: 1.1}
   }));
   workspace.componentDb_ = new Blockly.ComponentDatabase();

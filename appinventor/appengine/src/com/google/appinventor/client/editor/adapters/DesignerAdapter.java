@@ -13,9 +13,13 @@ public class DesignerAdapter extends JavaScriptObject implements IDesigner {
     AI.Adapter.Designer.prototype.addComponent = function() {
       var editor = this.editor;
       var args = Array.prototype.slice.call(arguments);
-      $entry(function() { editor.@com.google.appinventor.client.editor.youngandroid.YaFormEditor::addComponent(com/google/appinventor/
+      $entry(function() { editor.@com.google.appinventor.client.editor.youngandroid.YaFormEditor::addComponent(com/goo
     };
-    AI.Adapter.Designer.prototype.removeComponent = ;
+    AI.Adapter.Designer.prototype.removeComponent = function() {
+      var editor = this.editor;
+      var args = Array.prototype.slice.call(arguments);
+      $entry(function() { editor.@com.google.appinventor.client.editor.youngandroid.YaFormEditor::removeComponent(Ljava/lang/String;).apply(editor, args) })();
+    };
     AI.Adapter.Designer.prototype.renameComponent = ;
     AI.Adapter.Designer.prototype.setProperty = ;
   }-*/;
@@ -45,5 +49,9 @@ public class DesignerAdapter extends JavaScriptObject implements IDesigner {
   
   @Override
   public native void setProperty(String uuid, String name, String value)/*-{
+  }-*/;
+
+  @Override
+  public native void moveComponent(String uuid, String parentUuid, int index)/*-{
   }-*/;
 }

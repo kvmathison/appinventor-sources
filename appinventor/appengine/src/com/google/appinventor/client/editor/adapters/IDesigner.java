@@ -6,4 +6,5 @@ public interface IDesigner {
   public void renameComponent(String uuid, String name);
   public IComponent getComponentByUuid(String uuid);
   public void setProperty(String uuid, String property, String value);
+  public void moveComponent(String uuid, String parentUuid, int index);
 }

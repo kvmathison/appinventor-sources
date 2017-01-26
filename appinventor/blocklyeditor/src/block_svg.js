@@ -260,29 +260,6 @@ Blockly.BlockSvg.prototype.renderHere = function(opt_bubble) {
   Blockly.Instrument.stats.renderHereTime += timeDiff;
 };
 
-/*
-Blockly.BlockSvg.prototype.renderMoveConnections_ = function() {
-  var blockTL = this.getRelativeToSurfaceXY();
-  if (this.previousConnection) {
-    this.previousConnection.moveToOffset(blockTL);
-  }
-  if (this.outputConnection) {
-    this.outputConnection.moveToOffset(blockTL);
-  }
-
-  for (var i = 0; i < this.inputList.length; i++) {
-    var conn = this.inputList[i].connection;
-    if (conn) {
-      conn.moveToOffset(blockTL);
-    }
-  }
-
-  if (this.nextConnection) {
-    this.nextConnection.moveToOffset(blockTL);
-  }
-};
-*/
-
 if (Blockly.Instrument.useRenderDown) {
   /**
    * Set whether the block is collapsed or not.
