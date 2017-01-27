@@ -191,7 +191,12 @@ bd.acorn.ctr.createBlock = function(text){
     var treeObject = bd.toolbox.ctr.blockInfoToBlockObject(tree);
     var treeXML = bd.toolbox.ctr.blockObjectToXML(treeObject);
     var blockly = bd.acorn.ctr.getCurrentBlockly();
-    var block = blockly.Xml.domToBlock(blockly.mainWorkspace, treeXML);
+    if (bd.acorn.ctr.isGameblox) {
+        var block = blockly.Xml.domToBlock(blockly.mainWorkspace, treeXML);
+    }
+    else {
+        var block = blockly.Xml.domToBlock(treeXML, blockly.mainWorkspace);
+    }
     //repopulate(block);
 };
 
@@ -662,7 +667,14 @@ bd.acorn.ctr.createTextParameterArrays = function(block, methodName) {
  */
 bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, textParameters, input, methodName) {
 
-    var parameters = block.getParameters();
+    //
+    if (bd.acorn.ctr.isGameblox) {
+        var parameters = block.getParameters();
+    }
+    else {
+        var parameters = block.jsonObject["args0"];
+    }
+
     var blockInfo = block.jsBlockInfo;
     var Variables = {
         "value": "Value",
@@ -673,6 +685,7 @@ bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, t
     };
     //var Blockly = bd.script.ctr.getCurrentBlockly();
 
+    // relevant iff mutators
     var returnObject = bd.acorn.ctr.singleTextParameterSuffixAddition(block, numberOfEdits, whatNameNeedToBeEdited);
     var numberOfEdits = returnObject['numberOfEdits'];
     var whatNameNeedToBeEdited = returnObject['whatNameNeedToBeEdited'];
@@ -685,13 +698,21 @@ bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, t
     // the second if statement chunck checks the parameter types and depending on the type, it will either be a callback function or a literal
     for (var x = 0; x < numberOfTextParameters; x++) {
         for (var y = 0; y < parameters.length; y++) {
-
+            if (bd.acorn.ctr.isGameblox) {
+                var paramName = parameters[y].name;
+                var paramType = parameters[y].type;
+            }
+            else {
+                var paramName = parameters[y]["name"];
+                var paramType = parameters[y]["type"];
+            }
+             
             if (typeof textParameters[x] === "object") {
                 if (textParameters[x] instanceof window.Array) {
                     var argArray = [];
 
                     for (var z = 0; z < textParameters[x].length; z++) {
-                        if (bd.acorn.containsPrefix(textParameters[x][z], parameters[y].name)) {
+                        if (bd.acorn.containsPrefix(textParameters[x][z], paramName)) {
 
                             var fieldValue = block.getFieldValue(textParameters[x][z]);
                             if (fieldValue == null) {
@@ -700,16 +721,18 @@ bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, t
 
                             var isType = false;
                             var name;
+                            /*
                             if (bd.acorn.containsPrefix(fieldValue, "type:")) {
                                 id = bd.acorn.removePrefix(fieldValue, "type");
                                 name = Variables[id];
                             } else {
                                 name = fieldValue;
                             }
+                            */
+                            name = fieldValue;
 
-
-                            if (blockInfo.textParametersInfo[parameters[y].name] != null && blockInfo.textParametersInfo[parameters[y].name].localNestedMethods != null) {
-                                var localNestedMethods = blockInfo.textParametersInfo[parameters[y].name].localNestedMethods;
+                            if (blockInfo.textParametersInfo[paramName] != null && blockInfo.textParametersInfo[paramName].localNestedMethods != null) {
+                                var localNestedMethods = blockInfo.textParametersInfo[paramName].localNestedMethods;
                                 var methodNameToAdd = localNestedMethods.methodName;
                                 // var fieldNameToValueMutator = localNestedMethods.fieldNameToValueMutator;
                                 var relatedToMutator = localNestedMethods.relatedToMutator;
@@ -734,7 +757,7 @@ bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, t
                     var argDictionary = {};
 
                     for (var key in textParameters[x]) {
-                        if (bd.acorn.containsPrefix(key, parameters[y].name)) {
+                        if (bd.acorn.containsPrefix(key, paramName)) {
                             var keyFieldValue = block.getFieldValue(key);
                             if (keyFieldValue == null) {
                                 keyFieldValue = bd.acorn.ctr.blockToText(block.getInputTargetBlock(key));
@@ -742,12 +765,15 @@ bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, t
 
                             var isType = false;
                             var name;
+                            /*
                             if (bd.acorn.containsPrefix(keyFieldValue, "type:")) {
                                 id = bd.acorn.removePrefix(keyFieldValue, "type");
                                 name = Variables[id];
                             } else {
                                 name = keyFieldValue;
                             }
+                            */
+                            name = keyFieldValue;
 
                             var valueFieldValue = block.getFieldValue(textParameters[x][key]);
                             if (valueFieldValue == null) {
@@ -766,10 +792,10 @@ bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, t
             }
 
             // this regex is putting escapes for special characters in the string
-            var stringToGoIntoTheRegex = parameters[y].name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+            var stringToGoIntoTheRegex = paramName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
             var regex = new RegExp(stringToGoIntoTheRegex + "\\d+");
 
-            if (textParameters[x].match(regex) != null || textParameters[x] === parameters[y].name || textParameters[x] === "NEXT_BLOCK") {
+            if (textParameters[x].match(regex) != null || textParameters[x] === paramName || textParameters[x] === "NEXT_BLOCK") {
             // if (bd.acorn.containsPrefix(textParameters[x], parameters[y].name) || textParameters[x] === "NEXT_BLOCK") {
 
                 var hasLocalNestedMethod = false;
@@ -777,13 +803,13 @@ bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, t
                 if (blockInfo.textParametersInfo != null) {
                     var listOfMethodNames = Object.keys(Blockly.Blocks[block.type].jsBlockInfo.textParametersInfo);
 
-                    if (listOfMethodNames.indexOf(parameters[y].name) != -1 && Blockly.Blocks[block.type].jsBlockInfo.textParametersInfo[parameters[y].name].localNestedMethods != null) {
-                        var localNestedMethods = Blockly.Blocks[block.type].jsBlockInfo.textParametersInfo[parameters[y].name].localNestedMethods;
+                    if (listOfMethodNames.indexOf(paramName) != -1 && Blockly.Blocks[block.type].jsBlockInfo.textParametersInfo[paramName].localNestedMethods != null) {
+                        var localNestedMethods = Blockly.Blocks[block.type].jsBlockInfo.textParametersInfo[paramName].localNestedMethods;
 
                         methodNameToAdd = localNestedMethods.methodName;
                         var fieldNameToValueMutator = localNestedMethods.fieldNameToValueMutator;
 
-                        if (blockInfo.textParametersInfo[parameters[y].name].localNestedMethods.incrementName) {
+                        if (blockInfo.textParametersInfo[paramName].localNestedMethods.incrementName) {
                             for (var editNum = 0; block.getFieldValue(fieldNameToValueMutator + editNum) != null || block.getInputTargetBlock(fieldNameToValueMutator + editNum) != null; editNum++) {
                                 // numberOfMethodsToAdd = editNum;
                                 numberOfMethodsToAdd++;
@@ -799,7 +825,7 @@ bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, t
                 if (blockInfo.methodNameToBlockValues != null && blockInfo.methodNameToBlockValues[methodName] != null && blockInfo.methodNameToBlockValues[methodName].evaluateAsEntity != null){
                     whatToTreatAsEntity = blockInfo.methodNameToBlockValues[methodName].evaluateAsEntity;
 
-                    if (whatToTreatAsEntity.indexOf(parameters[y].name) != -1) {
+                    if (whatToTreatAsEntity.indexOf(paramName) != -1) {
                         var fieldValue = block.getFieldValue(textParameters[x]);
 
                         var isType = false, isID = false;
@@ -822,7 +848,7 @@ bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, t
 
 
                         var name;
-
+                        //TODO remove
                         if (isID && bd.component.lookup(id) != null) {
                             name = bd.component.lookup(id).model.name;
                         } else if (isType) {
@@ -838,7 +864,7 @@ bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, t
                         }
 
                         // this if statement check fixes whether specific types of parameters need to be added as string inputs always
-                        if (parameters[y].type == Blockly.Parameter.Types.STRING || parameters[y].type == Blockly.Parameter.Types.COLOR) {
+                        if (paramType == Blockly.Parameter.Types.STRING || paramType == Blockly.Parameter.Types.COLOR) {
                             input.push(["text", "\"" + name + "\""]);
                         } else {
                             input.push(["text", name]);
@@ -847,7 +873,7 @@ bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, t
                     }
                 }
 
-                if (parameters[y].type == Blockly.Parameter.Types.STATEMENT || textParameters[x] === "NEXT_BLOCK") {
+                if (paramType == Blockly.Parameter.Types.STATEMENT || textParameters[x] === "NEXT_BLOCK") {
                     if (block.getInputTargetBlock(textParameters[x])) {
                         var parameterBlock = bd.acorn.ctr.blockToText(block.getInputTargetBlock(textParameters[x]));
                         input.push(["callback", parameterBlock]);
@@ -858,7 +884,7 @@ bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, t
                         input.push(["callback", ""]);
                     }
                     break;
-                } else if (parameters[y].type == Blockly.Parameter.Types.VALUE) {
+                } else if (paramType == Blockly.Parameter.Types.VALUE) {
                     if(!haveToEditParameterNames){
                         var parameterBlock = bd.acorn.ctr.blockToText(block.getInputTargetBlock(textParameters[x]));
                         input.push(["text", parameterBlock]);
@@ -870,10 +896,10 @@ bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, t
                         }
                         break;
                     }
-                } else if (parameters[y].type == Blockly.Parameter.Types.DROPDOWN) {
+                } else if (paramType == Blockly.Parameter.Types.DROPDOWN) {
 
                     var number = block.getFieldValue(textParameters[x]);
-
+                    //TODO remove
                     if (bd.acorn.containsPrefix(number, "msg:")) {
                         var msgWithoutNamespace = bd.acorn.removePrefix(number, "msg");
                         if (bd.msg.contextVariables[msgWithoutNamespace + '_JS'] != null) {
@@ -894,20 +920,20 @@ bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, t
                         name = bd.acorn.ctr.addLocalNestedMethodToText(name, methodNameToAdd, numberOfMethodsToAdd);
                     }
 
-                    if (parameters[y].type == Blockly.Parameter.Types.STRING) {
+                    if (paramType == Blockly.Parameter.Types.STRING) {
                         input.push(["text", "\"" + name + "\""]);
                     } else {
                         input.push(["text", name]);
                     }
                     break;
-                } else if (parameters[y].type == Blockly.Parameter.Types.STRING) {
+                } else if (paramType == Blockly.Parameter.Types.STRING) {
                     var letter = block.getFieldValue(textParameters[x]);
 
                     if (hasLocalNestedMethod) {
                         letter = bd.acorn.ctr.addLocalNestedMethodToText(letter, methodNameToAdd, numberOfMethodsToAdd);
                     }
 
-                    if (parameters[y].type == Blockly.Parameter.Types.STRING) {
+                    if (paramType == Blockly.Parameter.Types.STRING) {
                         input.push(["text", "\"" + letter + "\""]);
                     } else {
                         input.push(["text", letter]);
@@ -1613,10 +1639,20 @@ bd.acorn.ctr.createTree = function(text) {
                 var scope = Blockly.Blocks[block.type].jsBlockInfo.scope;
                 if (scope !== "ENTITY") {
                     var isInList = false;
-                    for (var x in Blockly.Blocks[block.type].getParameters()){
-                        if (scope === x.name) {
-                            isInList = true;
-                            break;
+                    if (bd.acorn.ctr.isGameblox) {
+                        for (var x in Blockly.Blocks[block.type].getParameters()){
+                            if (scope === x.name) {
+                                isInList = true;
+                                break;
+                            }
+                        }
+                    }
+                    else {
+                        for (var x in Blockly.Blocks[block.type].jsonObject["args0"]){
+                            if (scope === x["name"]) {
+                                isInList = true;
+                                break;
+                            }
                         }
                     }
                     if (isInList === false) {
@@ -1686,11 +1722,22 @@ bd.acorn.ctr.createTree = function(text) {
 
             // if (scope !== "ENTITY") {
                 var isInList = false;
-                for (var x in Blockly.Blocks[block.type].getParameters()) {
-                    // debugger;
-                    if (scope === Blockly.Blocks[block.type].getParameters()[x].name) {
-                        isInList = true;
-                        break;
+                if (bd.acorn.ctr.isGameblox) {
+                    for (var x in Blockly.Blocks[block.type].getParameters()) {
+                        // debugger;
+                        if (scope === Blockly.Blocks[block.type].getParameters()[x].name) {
+                            isInList = true;
+                            break;
+                        }
+                    }
+                }
+                else {
+                    for (var x in Blockly.Blocks[block.type].jsonObject["args0"]) {
+                        // debugger;
+                        if (scope === Blockly.Blocks[block.type].jsonObject["args0"][x]["name"]) {
+                            isInList = true;
+                            break;
+                        }
                     }
                 }
                 if (isInList === true) {   // i'm flipping these around!?
@@ -1745,14 +1792,28 @@ bd.acorn.ctr.createTree = function(text) {
         for (var x = 0; x < parameters.length; x++) {
 
             hasBeenAssigned = false;
-            for (var y = 0; y < Blockly.Blocks[block.type].getParameters().length; y++) {
-	            // check if textParameters (aka parameters inside of the method) has a corresponding thing in getParameters() method and then do a .check to see if is variable
-	            // if true, it is an iterator_variable
-                if (parameters[x] === Blockly.Blocks[block.type].getParameters()[y].name && Blockly.Blocks[block.type].getParameters()[y].check === "Variable") {
-                    inputTemp = typeOfInput(parameters[x], Blockly, Blockly.Blocks[block.type]);
-                    input[parameters[x]] = { inputType: inputTemp, blockInfo: { type: "iterator_variable", fieldNameToValue: { "VAR": args[x].value }, mutatorNameToValue: { locked_parent_block_type: functionNameToBlockName[functionName] } } };
-                    hasBeenAssigned = true;
-                    break;
+            if (bd.acorn.ctr.isGameblox) {
+                for (var y = 0; y < Blockly.Blocks[block.type].getParameters().length; y++) {
+    	            // check if textParameters (aka parameters inside of the method) has a corresponding thing in getParameters() method and then do a .check to see if is variable
+    	            // if true, it is an iterator_variable
+                    if (parameters[x] === Blockly.Blocks[block.type].getParameters()[y].name && Blockly.Blocks[block.type].getParameters()[y].check === "Variable") {
+                        inputTemp = typeOfInput(parameters[x], Blockly, Blockly.Blocks[block.type]);
+                        input[parameters[x]] = { inputType: inputTemp, blockInfo: { type: "iterator_variable", fieldNameToValue: { "VAR": args[x].value }, mutatorNameToValue: { locked_parent_block_type: functionNameToBlockName[functionName] } } };
+                        hasBeenAssigned = true;
+                        break;
+                    }
+                }
+            }
+            else {
+                for (var y = 0; y < Blockly.Blocks[block.type].jsonObject["args0"].length; y++) {
+                    // check if textParameters (aka parameters inside of the method) has a corresponding thing in getParameters() method and then do a .check to see if is variable
+                    // if true, it is an iterator_variable
+                    if (parameters[x] === Blockly.Blocks[block.type].jsonObject["args0"][y]["name"] && Blockly.Blocks[block.type].jsonObject["args0"][y]["check"] === "Variable") {
+                        inputTemp = typeOfInput(parameters[x], Blockly, Blockly.Blocks[block.type]);
+                        input[parameters[x]] = { inputType: inputTemp, blockInfo: { type: "iterator_variable", fieldNameToValue: { "VAR": args[x].value }, mutatorNameToValue: { locked_parent_block_type: functionNameToBlockName[functionName] } } };
+                        hasBeenAssigned = true;
+                        break;
+                    }
                 }
             }
             if (hasBeenAssigned) {
@@ -2067,17 +2128,28 @@ function parametersInCallbackFunctionCalls(block, parameters, args, functionName
                         } else {
                             // currently this else statement means if it's not a fieldNameToValue, the input is going to be an iterator_variable
                             // probably need to change a lot of this to become more flexible for the future
-
-                            for (var z = 0; z < Blockly.Blocks[block.type].getParameters().length; z++) {
-                                var attributeName = Blockly.Blocks[block.type].jsBlockInfo.textParametersInfo[name].callbackParameters[y].name;
-                                if (attributeName === Blockly.Blocks[block.type].getParameters()[z].name && Blockly.Blocks[block.type].getParameters()[z].check === "Variable") {
-                                    inputTemp = typeOfInput(attributeName, Blockly, Blockly.Blocks[block.type]);
-                                    block.input[attributeName + x] = { inputType: inputTemp, blockInfo: { type: "iterator_variable", fieldNameToValue: { "VAR": argumentNode[x].name }, mutatorNameToValue: { locked_parent_block_type: functionNameToBlockName[functionName] } } };
-                                    hasBeenAssigned = true;
-                                    break;
+                            if (bd.acorn.ctr.isGameblox) {
+                                for (var z = 0; z < Blockly.Blocks[block.type].getParameters().length; z++) {
+                                    var attributeName = Blockly.Blocks[block.type].jsBlockInfo.textParametersInfo[name].callbackParameters[y].name;
+                                    if (attributeName === Blockly.Blocks[block.type].getParameters()[z].name && Blockly.Blocks[block.type].getParameters()[z].check === "Variable") {
+                                        inputTemp = typeOfInput(attributeName, Blockly, Blockly.Blocks[block.type]);
+                                        block.input[attributeName + x] = { inputType: inputTemp, blockInfo: { type: "iterator_variable", fieldNameToValue: { "VAR": argumentNode[x].name }, mutatorNameToValue: { locked_parent_block_type: functionNameToBlockName[functionName] } } };
+                                        hasBeenAssigned = true;
+                                        break;
+                                    }
                                 }
                             }
-
+                            else {
+                                for (var z = 0; z < Blockly.Blocks[block.type].jsonObject["args0"].length; z++) {
+                                    var attributeName = Blockly.Blocks[block.type].jsBlockInfo.textParametersInfo[name].callbackParameters[y].name;
+                                    if (attributeName === Blockly.Blocks[block.type].jsonObject["args0"][z]["name"] && Blockly.Blocks[block.type].jsonObject["args0"][z]["check"] === "Variable") {
+                                        inputTemp = typeOfInput(attributeName, Blockly, Blockly.Blocks[block.type]);
+                                        block.input[attributeName + x] = { inputType: inputTemp, blockInfo: { type: "iterator_variable", fieldNameToValue: { "VAR": argumentNode[x].name }, mutatorNameToValue: { locked_parent_block_type: functionNameToBlockName[functionName] } } };
+                                        hasBeenAssigned = true;
+                                        break;
+                                    }
+                                }
+                            }
 
                         }
                     }
@@ -2642,16 +2714,31 @@ function mathOperator(expressionNode) {
  *
  */
 function typeOfInput(name, block, blockInfo){
-    var param = blockInfo.getParameters();
+    if (bd.acorn.ctr.isGameblox) {
+        var param = blockInfo.getParameters();
+    }
+    else {
+        var param = blockInfo.jsonObject["args0"];
+    }
 
     for (var x = 0; x < param.length; x++) {
         if (bd.acorn.containsPrefix(name, param[x].name)) { //param[x].name === name
-            if (param[x].type == block.Parameter.Types.STATEMENT)
-                type = "statement";
-            if (param[x].type == block.Parameter.Types.VALUE)
-                type = "value";
-            if (param[x].type == block.Parameter.Types.DROPDOWN)
-            	type = "statement";
+            if (bd.acorn.ctr.isGameblox) {
+                if (param[x].type == block.Parameter.Types.STATEMENT)
+                    type = "statement";
+                if (param[x].type == block.Parameter.Types.VALUE)
+                    type = "value";
+                if (param[x].type == block.Parameter.Types.DROPDOWN)
+                	type = "statement";
+            }
+            else{
+                if (param[x].type == "input_statement")
+                    type = "statement";
+                if (param[x]["type"] == "input_value")
+                    type = "value";
+                if (param[x].type == "field_dropdown")
+                    type = "statement";
+            }
         }
     }
 

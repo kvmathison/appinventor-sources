@@ -17,6 +17,7 @@ goog.require('Blockly.Blocks.Utilities');
 Blockly.Blocks['math_number'] = {
   // Numeric value.
   category: 'Math',
+  /*
   helpUrl: Blockly.Msg.LANG_MATH_NUMBER_HELPURL,
   init: function () {
     this.setColour(Blockly.MATH_CATEGORY_HUE);
@@ -25,11 +26,32 @@ Blockly.Blocks['math_number'] = {
     this.setOutput(true, Blockly.Blocks.Utilities.YailTypeToBlocklyType("number", Blockly.Blocks.Utilities.OUTPUT));
     this.setTooltip(Blockly.Msg.LANG_MATH_NUMBER_TOOLTIP);
   },
+  /*
   getParameters: function(){
       var params = [];
       var v = Blockly.Blocks.math_number.validator;
       params.push(new Blockly.ParameterText('NUM', '0', v));
       return params;
+  },
+  */
+  jsonObject: {
+    "type": "math_number",
+    "message0": "%1",
+    "args0": [
+      {
+        "type": "field_number",
+        "name": "NUM",
+        "value": "0"
+      }
+    ],
+    "output": "Number",
+    "category": "Math",
+    "colour": Blockly.MATH_CATEGORY_HUE,
+    "tooltip": Blockly.Msg.LANG_MATH_NUMBER_TOOLTIP,
+    "helpUrl": Blockly.Msg.LANG_MATH_NUMBER_HELPURL
+  },
+  init: function() {
+    this.jsonInit(this.jsonObject);
   },
   jsBlockInfo: {
     scope: "GLOBAL",
@@ -53,6 +75,7 @@ Blockly.Blocks['math_compare'] = {
   // Basic arithmetic operator.
   // TODO(Andrew): equality block needs to have any on the sockets.
   category: 'Math',
+  /*
   helpUrl: function () {
     var mode = this.getFieldValue('OP');
     return Blockly.Blocks.math_compare.HELPURLS()[mode];
@@ -86,6 +109,49 @@ Blockly.Blocks['math_compare'] = {
     params.push(new Blockly.ParameterValue('B', 'Number', null)); // todo
     params.push(new Blockly.ParameterDropdown('OP', OPERATORS, null));
     return params;
+  },
+  */
+  jsonObject: {
+    "type": "math_compare",
+    "message0": "%1 %3 %2",
+    "args0": [
+      {
+        "type": "input_value",
+        "name": "A"
+      },
+      {
+        "type": "input_value",
+        "name": "B"
+      },
+      {
+        "type": "field_dropdown",
+        "name": "OP",
+        "options": [
+          [Blockly.Msg.LANG_MATH_COMPARE_EQ, 'EQ'],
+          [Blockly.Msg.LANG_MATH_COMPARE_NEQ, 'NEQ'],
+          [Blockly.Msg.LANG_MATH_COMPARE_LT, 'LT'],
+          [Blockly.Msg.LANG_MATH_COMPARE_LTE, 'LTE'],
+          [Blockly.Msg.LANG_MATH_COMPARE_GT, 'GT'],
+          [Blockly.Msg.LANG_MATH_COMPARE_GTE, 'GTE']
+        ]
+      }
+    ],
+    "output": "Boolean",
+    "category": "Math",
+    "inputsInline": true,
+    "colour": Blockly.MATH_CATEGORY_HUE
+  },
+  init: function() {
+    this.jsonInit(this.jsonObject);
+    var thisBlock = this;
+    this.setTooltip(function () {
+      var mode = thisBlock.getFieldValue('OP');
+      return Blockly.Blocks.math_compare.TOOLTIPS()[mode];
+    });
+    this.setHelpUrl(function () {
+      var mode = this.getFieldValue('OP');
+      return Blockly.Blocks.math_compare.HELPURLS()[mode];
+    });
   },
   jsBlockInfo: {
     scope: "GLOBAL",
