@@ -666,9 +666,8 @@ bd.acorn.ctr.createTextParameterArrays = function(block, methodName) {
  *  @param {String} methodName - name of the method corresponding to the current block
  */
 bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, textParameters, input, methodName) {
-
     //
-    if (bd.acorn.ctr.isGameblox) {
+    if (block.jsonObject == null) {
         var parameters = block.getParameters();
     }
     else {
@@ -698,7 +697,7 @@ bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, t
     // the second if statement chunck checks the parameter types and depending on the type, it will either be a callback function or a literal
     for (var x = 0; x < numberOfTextParameters; x++) {
         for (var y = 0; y < parameters.length; y++) {
-            if (bd.acorn.ctr.isGameblox) {
+            if (block.jsonObject == null) {
                 var paramName = parameters[y].name;
                 var paramType = parameters[y].type;
             }
@@ -1117,7 +1116,13 @@ bd.acorn.ctr.singleTextParameterSuffixAddition = function(block, numberOfEdits, 
                 haveToEditParameterNames = false;   //used to be true bcause assuming that would always have to editParameterNames but now if need to edit names, it depends on whether or not there is an incrementName
             }
             // this is currently assuming only one variable that needs to be edited, if more than one and not unique, will need to store in an array later and loop through them
-            numberOfEdits = block.mutators[result[x].blockVariableName];
+            if (bd.acorn.ctr.isGameblox) {
+                numberOfEdits = block.mutators[result[x].blockVariableName];
+            }
+            else {
+                numberOfEdits = block[result[x].blockVariableName];
+
+            }
         }
     }
 
@@ -1639,7 +1644,7 @@ bd.acorn.ctr.createTree = function(text) {
                 var scope = Blockly.Blocks[block.type].jsBlockInfo.scope;
                 if (scope !== "ENTITY") {
                     var isInList = false;
-                    if (bd.acorn.ctr.isGameblox) {
+                    if (Blockly.Blocks[block.type].jsonObject == null) {
                         for (var x in Blockly.Blocks[block.type].getParameters()){
                             if (scope === x.name) {
                                 isInList = true;
@@ -1722,7 +1727,7 @@ bd.acorn.ctr.createTree = function(text) {
 
             // if (scope !== "ENTITY") {
                 var isInList = false;
-                if (bd.acorn.ctr.isGameblox) {
+                if (Blockly.Blocks[block.type].jsonObject == null) {
                     for (var x in Blockly.Blocks[block.type].getParameters()) {
                         // debugger;
                         if (scope === Blockly.Blocks[block.type].getParameters()[x].name) {
@@ -1792,7 +1797,7 @@ bd.acorn.ctr.createTree = function(text) {
         for (var x = 0; x < parameters.length; x++) {
 
             hasBeenAssigned = false;
-            if (bd.acorn.ctr.isGameblox) {
+            if (Blockly.Blocks[block.type].jsonObject == null) {
                 for (var y = 0; y < Blockly.Blocks[block.type].getParameters().length; y++) {
     	            // check if textParameters (aka parameters inside of the method) has a corresponding thing in getParameters() method and then do a .check to see if is variable
     	            // if true, it is an iterator_variable
@@ -2128,7 +2133,7 @@ function parametersInCallbackFunctionCalls(block, parameters, args, functionName
                         } else {
                             // currently this else statement means if it's not a fieldNameToValue, the input is going to be an iterator_variable
                             // probably need to change a lot of this to become more flexible for the future
-                            if (bd.acorn.ctr.isGameblox) {
+                            if (Blockly.Blocks[block.type].jsonObject == null) {
                                 for (var z = 0; z < Blockly.Blocks[block.type].getParameters().length; z++) {
                                     var attributeName = Blockly.Blocks[block.type].jsBlockInfo.textParametersInfo[name].callbackParameters[y].name;
                                     if (attributeName === Blockly.Blocks[block.type].getParameters()[z].name && Blockly.Blocks[block.type].getParameters()[z].check === "Variable") {
@@ -2714,7 +2719,7 @@ function mathOperator(expressionNode) {
  *
  */
 function typeOfInput(name, block, blockInfo){
-    if (bd.acorn.ctr.isGameblox) {
+    if (blockInfo.jsonObject == null) {
         var param = blockInfo.getParameters();
     }
     else {
@@ -2723,7 +2728,7 @@ function typeOfInput(name, block, blockInfo){
 
     for (var x = 0; x < param.length; x++) {
         if (bd.acorn.containsPrefix(name, param[x].name)) { //param[x].name === name
-            if (bd.acorn.ctr.isGameblox) {
+            if (blockInfo.jsonObject  == null) {
                 if (param[x].type == block.Parameter.Types.STATEMENT)
                     type = "statement";
                 if (param[x].type == block.Parameter.Types.VALUE)

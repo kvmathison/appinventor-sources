@@ -17,23 +17,6 @@ goog.require('Blockly.Blocks.Utilities');
 Blockly.Blocks['math_number'] = {
   // Numeric value.
   category: 'Math',
-  /*
-  helpUrl: Blockly.Msg.LANG_MATH_NUMBER_HELPURL,
-  init: function () {
-    this.setColour(Blockly.MATH_CATEGORY_HUE);
-    this.appendDummyInput().appendField(
-        new Blockly.FieldTextInput('0', Blockly.Blocks.math_number.validator), 'NUM');
-    this.setOutput(true, Blockly.Blocks.Utilities.YailTypeToBlocklyType("number", Blockly.Blocks.Utilities.OUTPUT));
-    this.setTooltip(Blockly.Msg.LANG_MATH_NUMBER_TOOLTIP);
-  },
-  /*
-  getParameters: function(){
-      var params = [];
-      var v = Blockly.Blocks.math_number.validator;
-      params.push(new Blockly.ParameterText('NUM', '0', v));
-      return params;
-  },
-  */
   jsonObject: {
     "type": "math_number",
     "message0": "%1",
@@ -64,53 +47,10 @@ Blockly.Blocks['math_number'] = {
   typeblock: [{translatedName: Blockly.Msg.LANG_MATH_MUTATOR_ITEM_INPUT_NUMBER}]
 };
 
-Blockly.Blocks.math_number.validator = function (text) {
-  // Ensure that only a number may be entered.
-  // TODO: Handle cases like 'o', 'ten', '1,234', '3,14', etc.
-  var n = window.parseFloat(text || 0);
-  return window.isNaN(n) ? null : String(n);
-};
-
 Blockly.Blocks['math_compare'] = {
   // Basic arithmetic operator.
   // TODO(Andrew): equality block needs to have any on the sockets.
   category: 'Math',
-  /*
-  helpUrl: function () {
-    var mode = this.getFieldValue('OP');
-    return Blockly.Blocks.math_compare.HELPURLS()[mode];
-  },
-  init: function () {
-    this.setColour(Blockly.MATH_CATEGORY_HUE);
-    this.setOutput(true, Blockly.Blocks.Utilities.YailTypeToBlocklyType("boolean", Blockly.Blocks.Utilities.OUTPUT));
-    this.appendValueInput('A')
-        .setCheck(null);
-    this.appendValueInput('B')
-        .setCheck(null)
-        .appendField(new Blockly.FieldDropdown(this.OPERATORS, Blockly.Blocks.math_compare.onchange), 'OP');
-    this.setInputsInline(true);
-    // Assign 'this' to a variable for use in the tooltip closure below.
-    var thisBlock = this;
-    this.setTooltip(function () {
-      var mode = thisBlock.getFieldValue('OP');
-      return Blockly.Blocks.math_compare.TOOLTIPS()[mode];
-    });
-  },
-  getParameters: function(){
-    var params = []
-    var OPERATORS =
-      [[Blockly.Msg.LANG_MATH_COMPARE_EQ, 'EQ'],
-       [Blockly.Msg.LANG_MATH_COMPARE_NEQ, 'NEQ'],
-       [Blockly.Msg.LANG_MATH_COMPARE_LT, 'LT'],
-       [Blockly.Msg.LANG_MATH_COMPARE_LTE, 'LTE'],
-       [Blockly.Msg.LANG_MATH_COMPARE_GT, 'GT'],
-       [Blockly.Msg.LANG_MATH_COMPARE_GTE, 'GTE']];
-    params.push(new Blockly.ParameterValue('A', 'Number', null)); // todo
-    params.push(new Blockly.ParameterValue('B', 'Number', null)); // todo
-    params.push(new Blockly.ParameterDropdown('OP', OPERATORS, null));
-    return params;
-  },
-  */
   jsonObject: {
     "type": "math_compare",
     "message0": "%1 %3 %2",
@@ -152,6 +92,7 @@ Blockly.Blocks['math_compare'] = {
       var mode = this.getFieldValue('OP');
       return Blockly.Blocks.math_compare.HELPURLS()[mode];
     });
+    this.prevBlocks_ = [null, null];
   },
   jsBlockInfo: {
     scope: "GLOBAL",
@@ -177,63 +118,31 @@ Blockly.Blocks['math_compare'] = {
 
       return text;
     }
-
   },
-  // Potential clash with logic equal, using '=' for now
-  typeblock: [{
-    translatedName: Blockly.Msg.LANG_MATH_COMPARE_EQ,
-    dropDown: {
-      titleName: 'OP',
-      value: 'EQ'
+  onchange: function(e) {
+    var blockA = this.getInputTargetBlock('A');
+    var blockB = this.getInputTargetBlock('B');
+    // Disconnect blocks that existed prior to this change if they don't match.
+    if (blockA && blockB &&
+        !blockA.outputConnection.checkType_(blockB.outputConnection)) {
+      // Mismatch between two inputs.  Disconnect previous and bump it away.
+      // Ensure that any disconnections are grouped with the causing event.
+      Blockly.Events.setGroup(e.group);
+      for (var i = 0; i < this.prevBlocks_.length; i++) {
+        var block = this.prevBlocks_[i];
+        if (block === blockA || block === blockB) {
+          block.unplug();
+          block.bumpNeighbours_();
+        }
+      }
+      Blockly.Events.setGroup(false);
     }
-  }, {
-    translatedName: Blockly.Msg.LANG_MATH_COMPARE_NEQ,
-    dropDown: {
-      titleName: 'OP',
-      value: 'NEQ'
-    }
-  }, {
-    translatedName: Blockly.Msg.LANG_MATH_COMPARE_LT,
-    dropDown: {
-      titleName: 'OP',
-      value: 'LT'
-    }
-  }, {
-    translatedName: Blockly.Msg.LANG_MATH_COMPARE_LTE,
-    dropDown: {
-      titleName: 'OP',
-      value: 'LTE'
-    }
-  }, {
-    translatedName: Blockly.Msg.LANG_MATH_COMPARE_GT,
-    dropDown: {
-      titleName: 'OP',
-      value: 'GT'
-    }
-  }, {
-    translatedName: Blockly.Msg.LANG_MATH_COMPARE_GTE,
-    dropDown: {
-      titleName: 'OP',
-      value: 'GTE'
-    }
-  }]
-};
-
-Blockly.Blocks.math_compare.onchange = function (value) {
-  if (!this.sourceBlock_) {
-    return;
-  }
-  if (value == "EQ" || value == "NEQ") {
-    this.sourceBlock_.getInput("A").setCheck(null);
-    this.sourceBlock_.getInput("B").setCheck(null);
-  } else {
-    this.sourceBlock_.getInput("A")
-        .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("number", Blockly.Blocks.Utilities.INPUT));
-    this.sourceBlock_.getInput("B")
-        .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("number", Blockly.Blocks.Utilities.INPUT));
+    this.prevBlocks_[0] = blockA;
+    this.prevBlocks_[1] = blockB;
   }
 };
 
+/*
 Blockly.Blocks.math_compare.OPERATORS = function () {
   return [[Blockly.Msg.LANG_MATH_COMPARE_EQ, 'EQ'],
     [Blockly.Msg.LANG_MATH_COMPARE_NEQ, 'NEQ'],
@@ -241,7 +150,7 @@ Blockly.Blocks.math_compare.OPERATORS = function () {
     [Blockly.Msg.LANG_MATH_COMPARE_LTE, 'LTE'],
     [Blockly.Msg.LANG_MATH_COMPARE_GT, 'GT'],
     [Blockly.Msg.LANG_MATH_COMPARE_GTE, 'GTE']];
-};
+};*/
 
 Blockly.Blocks.math_compare.TOOLTIPS = function () {
   return {
@@ -307,9 +216,9 @@ Blockly.Blocks['math_add'] = {
   },
   getParameters: function(){
     var params = [];
-    var value = new Blockly.ParameterValue('NUM0', 'Number', null); // todo
+    var value = new Blockly.ParameterValue('NUM0', Blockly.Blocks.Utilities.YailTypeToBlocklyType("number", Blockly.Blocks.Utilities.INPUT), null); // todo
     params.push(value);
-    var value = new Blockly.ParameterValue('NUM1', 'Number', null); // todo
+    var value = new Blockly.ParameterValue('NUM1', Blockly.Blocks.Utilities.YailTypeToBlocklyType("number", Blockly.Blocks.Utilities.INPUT), null); // todo
     params.push(value);
     return params;
   },

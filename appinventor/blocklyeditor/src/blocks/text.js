@@ -17,16 +17,33 @@ goog.require('Blockly.Blocks.Utilities');
 Blockly.Blocks['text'] = {
   // Text value.
   category: 'Text',
-  helpUrl: Blockly.Msg.LANG_TEXT_TEXT_HELPURL,
-  init: function () {
-    this.setColour(Blockly.TEXT_CATEGORY_HUE);
-    this.appendDummyInput().appendField(Blockly.Msg.LANG_TEXT_TEXT_LEFT_QUOTE).appendField(
-        new Blockly.FieldTextBlockInput(''),
-        'TEXT').appendField(Blockly.Msg.LANG_TEXT_TEXT_RIGHT_QUOTE);
-    this.setOutput(true, [Blockly.Blocks.text.connectionCheck]);
-    this.setTooltip(Blockly.Msg.LANG_TEXT_TEXT_TOOLTIP);
+  jsonObject: {
+    "type": "text",
+    "message0": Blockly.Msg.LANG_TEXT_TEXT_LEFT_QUOTE+"%1"+Blockly.Msg.LANG_TEXT_TEXT_RIGHT_QUOTE,
+    "args0": [
+      {
+        "type": "field_input",
+        "name": "TEXT",
+        "text": ""
+      }
+    ],
+    "category": "Text",
+    "colour": Blockly.TEXT_CATEGORY_HUE,
+    "tooltip": Blockly.Msg.TEXT_TEXT_TOOLTIP,
+    "helpUrl": Blockly.Msg.LENG_TEXT_TEXT_HELPURL
   },
-  typeblock: [{translatedName: Blockly.Msg.LANG_CATEGORY_TEXT}]
+  init: function() {
+    this.jsonInit(this.jsonObject);
+    this.setOutput(true, [Blockly.Blocks.text.connectionCheck]);
+  },
+  jsBlockInfo: {
+    scope: "GLOBAL",
+    methodName: "text",
+    textParameters: ["TEXT"],
+    blockToText: function(block) {
+      return "\""+block.getFieldValue("TEXT")+"\"";
+    }
+  },
 };
 
 Blockly.Blocks.text.connectionCheck = function (myConnection, otherConnection) {
@@ -58,6 +75,29 @@ Blockly.Blocks['text_join'] = {
     this.emptyInputName = 'EMPTY';
     this.repeatingInputName = 'ADD';
     this.itemCount_ = 2;
+  },
+  jsBlockInfo: {
+    scope: "GLOBAL",
+    methodName: "join",
+    textParameters: ["ADD"]
+  },
+  getParameters: function() {
+    var params = [];
+    params.push(new Blockly.ParameterValue("ADD", ["String","Number","Boolean"], Blockly.ALIGN_RIGHT));
+    params.push(new Blockly.ParameterMutator("items", true));
+    return params;
+  },
+  getMutatorNameToInfoObject: function() {
+    return {
+      items: {
+        //generateFromBlockFxn: bd.blocks.ctr.getNumOfNamedInput(this,"ADD"),
+        textParameters:"ADD",
+        blockVariableName: "itemCount_",
+        //getRepeatNumFxn: fxnForCalculatingRepeats...
+        isInteger: true,
+        incrementName: true
+      }
+    };
   },
   mutationToDom: Blockly.mutationToDom,
   domToMutation: Blockly.domToMutation,
