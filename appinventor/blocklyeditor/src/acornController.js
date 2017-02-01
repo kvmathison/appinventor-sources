@@ -210,10 +210,15 @@ bd.acorn.ctr.createXmlBlock = function(text){
 
 bd.acorn.ctr.populateDOM = function(treeXML) {
 	var blockly = bd.acorn.ctr.getCurrentBlockly();
-    blockly.Xml.domToWorkspace(blockly.mainWorkspace, treeXML);
+    if (bd.acorn.ctr.isGameblox) {
+        blockly.Xml.domToWorkspace(blockly.mainWorkspace, treeXML);
+    }
+    else {
+        blockly.Xml.domToWorkspace(treeXML, blockly.mainWorkspace);
+    }
 
     //update all titles on script page
-    bd.component.lookup(bd.script.ctr.getSelectedScriptPageId()).updateAllTitles();
+    //bd.component.lookup(bd.script.ctr.getSelectedScriptPageId()).updateAllTitles();
 };
 
 
@@ -1909,7 +1914,8 @@ function createOptionsOnBlock(block, options) {
         arrayOfOptions = options.split(";");
         var results;
         for (option in arrayOfOptions) {
-            if (results = arrayOfOptions[option].match(/^[ *|\t*]*COORDINATES:[ *|\t*]*x[ *|\t*]*:[ *|\t*]*(\d+)[ *|\t*]*,[ *|\t*]*y[ *|\t*]*:[ *|\t*]*(\d+)/)) {
+            // fixed regex to accept negative numbers
+            if (results = arrayOfOptions[option].match(/^[ *|\t*]*COORDINATES:[ *|\t*]*x[ *|\t*]*:[ *|\t*]*(-?\d+)[ *|\t*]*,[ *|\t*]*y[ *|\t*]*:[ *|\t*]*(-?\d+)/)) {
                 block['x'] = results[1];
                 block['y'] = results[2];
             }

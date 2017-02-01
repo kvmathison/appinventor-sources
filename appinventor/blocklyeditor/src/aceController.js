@@ -3,10 +3,10 @@ goog.provide('bd.ace.ctr');
 bd.ace.ctr.editor = null;
 bd.ace.ctr.beautify = null;
 
-jQuery(document).ready(function() {
-	if (bd.ace.ctr.inJSEditor()) {
+bd.ace.ctr.aceStart = function() {
+	/*if (bd.ace.ctr.inJSEditor()) {
 		document.getElementById("editorViewer").style.display = "block";
-	}
+	}*/
 
   var editor = ace.edit("aceTextEditorContainer");
   editor.setTheme("ace/theme/textmate");
@@ -42,7 +42,7 @@ jQuery(document).ready(function() {
   //  -----------------------------------
 
 
-
+  editor.setValue("");
 
 
  //  var beautify = ace.require("ace/ext/beautify"); // get reference to extension
@@ -88,11 +88,7 @@ jQuery(document).ready(function() {
   // });
 
 
-
-
-
-
-});
+};
 
 bd.ace.ctr.inJSEditor = function() {
 	if (document.getElementById("jsEditor").innerHTML === "True") {

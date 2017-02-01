@@ -70,6 +70,71 @@ Blockly.Blocks['controls_if'] = {
     this.elseCount_ = 0;
     this.warnings = [{name: "checkEmptySockets", sockets: [{baseName: "IF"}, {baseName: "DO"}]}];
   },
+  jsBlockInfo: {
+    scope: "GLOBAL",
+    methodName: "ifStatement",
+    blockToText: function(block) {
+      var IF = "IF",
+          DO = "DO",
+          ELSE = "ELSE";
+      var text = "";
+
+      text += "if (" + bd.acorn.ctr.blockToText(block.getInputTargetBlock(IF + 0)) + ") {";
+      if (block.getInputTargetBlock(DO + 0) != null) {
+        text += bd.acorn.ctr.blockToText(block.getInputTargetBlock(DO + 0)) + "}";
+      } else {
+        text += "}";
+      }
+
+      for (var x = 1; block.getInputTargetBlock(IF + x) != null; x++) {
+        if (block.getInputTargetBlock(IF + x) != null) {
+          text += "else if (" + bd.acorn.ctr.blockToText(block.getInputTargetBlock(IF + x)) + ") {";
+        }
+        if (block.getInputTargetBlock(DO + x) != null) {
+          text += bd.acorn.ctr.blockToText(block.getInputTargetBlock(DO + x)) + "}";
+        } else {
+          text += "}";
+        }
+      }
+
+      if (block.getInputTargetBlock(ELSE) != null) {
+        text += "else {" + bd.acorn.ctr.blockToText(block.getInputTargetBlock(ELSE)) + "}";
+      } else if (block.elseCount_) { // replace this hardcode later
+        text += "else {}";
+      }
+
+      return text;
+    }
+  },
+
+  getParameters: function() {
+    var params = [];
+    params.push(new Blockly.ParameterValue("IF0", "Boolean", Blockly.ALIGN_LEFT));
+    params.push(new Blockly.ParameterStatement("DO0"));
+    params.push(new Blockly.ParameterValue("IF", "Boolean", Blockly.ALIGN_LEFT));
+    params.push(new Blockly.ParameterStatement("DO"))
+    params.push(new Blockly.ParameterMutator("elseif", true, null, 1))
+    params.push(new Blockly.ParameterStatement("ELSE"));
+    params.push(new Blockly.ParameterMutator("else"))
+    return params;
+  },
+  getMutatorNameToInfoObject: function() {
+    return {
+      "elseif": {
+        blockVariableName: "elseifCount_",
+        isInteger: true,
+        nameSuffixIncrement: 1,
+        incrementName: true,
+        input: ["IF", "DO"]
+      },
+      "else": {
+        blockVariableName: "elseCount_",
+        isInteger: true,
+        incrementName: false,
+        input: "ELSE"
+      }
+    };
+  },
   mutationToDom: function () {
     if (!this.elseifCount_ && !this.elseCount_) {
       return null;

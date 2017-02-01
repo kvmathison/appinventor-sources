@@ -121,7 +121,9 @@
     "./src/acorn.js",
     "./src/acornController.js",
     "./src/messages.js",
-    "./src/toolboxController.js",
+    "./src/toolboxController.js",    
+    "./src/aceController.js",
+    "./src/contentController.js",
 
     // Dialog Utiltiy
     "./src/util.js",
