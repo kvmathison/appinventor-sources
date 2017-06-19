@@ -81,7 +81,7 @@ Blockly.Blocks['text_join'] = {
     methodName: "join",
     textParameters: ["ADD"]
   },
-  getParameters: function() {
+  getParametersBTT: function() {
     var params = [];
     params.push(new Blockly.ParameterValue("ADD", ["String","Number","Boolean"], Blockly.ALIGN_RIGHT));
     params.push(new Blockly.ParameterMutator("items", true));

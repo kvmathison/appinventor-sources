@@ -107,7 +107,7 @@ Blockly.Blocks['controls_if'] = {
     }
   },
 
-  getParameters: function() {
+  getParametersBTT: function() {
     var params = [];
     params.push(new Blockly.ParameterValue("IF0", "Boolean", Blockly.ALIGN_LEFT));
     params.push(new Blockly.ParameterStatement("DO0"));
@@ -645,7 +645,7 @@ Blockly.Blocks['controls_closeScreen'] = {
     methodName:"closeScreen",
     textParameters: []
   },
-  getParameters: function() {
+  getParametersBTT: function() {
     return [];
   },
   typeblock: [{translatedName: Blockly.Msg.LANG_CONTROLS_CLOSE_SCREEN_TITLE}]

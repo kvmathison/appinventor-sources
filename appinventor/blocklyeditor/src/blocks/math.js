@@ -214,7 +214,7 @@ Blockly.Blocks['math_add'] = {
       return text;
     }
   },
-  getParameters: function(){
+  getParametersBTT: function(){
     var params = [];
     var value = new Blockly.ParameterValue('NUM0', Blockly.Blocks.Utilities.YailTypeToBlocklyType("number", Blockly.Blocks.Utilities.INPUT), null); // todo
     params.push(value);
@@ -292,7 +292,7 @@ Blockly.Blocks['math_subtract'] = {
       return text;
     }
   },
-  getParameters: function(){
+  getParametersBTT: function(){
     var params = [];
     var value = new Blockly.ParameterValue('A', 'Number', null); // todo
     params.push(value);
@@ -343,7 +343,7 @@ Blockly.Blocks['math_multiply'] = {
       return text;
     }
   },
-  getParameters: function(){
+  getParametersBTT: function(){
     var params = [];
     var value = new Blockly.ParameterValue('NUM0', 'Number', null); // todo
     params.push(value);
@@ -407,7 +407,7 @@ Blockly.Blocks['math_division'] = {
       return text;
     }
   },
-  getParameters: function(){
+  getParametersBTT: function(){
     var params = [];
     var value = new Blockly.ParameterValue('A', 'Number', null); // todo
     params.push(value);
@@ -451,7 +451,7 @@ Blockly.Blocks['math_power'] = {
       return text;
     }
   },
-  getParameters: function(){
+  getParametersBTT: function(){
     var params = [];
     var value = new Blockly.ParameterValue('A', 'Number', null); // todo
     params.push(value);
@@ -486,7 +486,7 @@ Blockly.Blocks['math_random_int'] = {
     this.setInputsInline(true);
     this.setTooltip(Blockly.Msg.LANG_MATH_RANDOM_INT_TOOLTIP);
   },
-  getParameters: function(){
+  getParametersBTT: function(){
     var params = []
     params.push(new Blockly.ParameterValue('FROM', 'Number', null)); // todo
     params.push(new Blockly.ParameterValue('TO', 'Number', null)); // todo
@@ -511,7 +511,7 @@ Blockly.Blocks['math_random_float'] = {
         .appendField(Blockly.Msg.LANG_MATH_RANDOM_FLOAT_TITLE_RANDOM);
     this.setTooltip(Blockly.Msg.LANG_MATH_RANDOM_FLOAT_TOOLTIP);
   },
-  getParameters: function(){
+  getParametersBTT: function(){
     var params = []
     return params;
   },
@@ -538,7 +538,7 @@ Blockly.Blocks['math_random_set_seed'] = {
     this.setNextStatement(true);
     this.setTooltip(Blockly.Msg.LANG_MATH_RANDOM_SEED_TOOLTIP);
   },
-  getParameters: function(){
+  getParametersBTT: function(){
     var params = []
     params.push(new Blockly.ParameterValue('NUM', 'Number', null)); // todo
     return params;
@@ -654,7 +654,7 @@ Blockly.Blocks['math_single'] = {
       return Blockly.Blocks.math_single.TOOLTIPS()[mode];
     });
   },
-  getParameters: function(){
+  getParametersBTT: function(){
     var params = [];
     var OPERATORS =
         [[Blockly.Msg.MATH_SINGLE_OP_ROOT, 'ROOT'],

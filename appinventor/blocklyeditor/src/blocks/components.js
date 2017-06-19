@@ -16,6 +16,7 @@ goog.provide('AI.Blockly.Blocks.components');
 goog.provide('AI.Blockly.ComponentBlock');
 goog.require('Blockly.Blocks.Utilities');
 
+
 Blockly.Blocks.components = {};
 Blockly.ComponentBlock = {};
 
@@ -52,6 +53,64 @@ Blockly.Blocks.component_event = {
   category : 'Component',
   blockType : 'event',
 
+  jsBlockInfo: {
+    scope: "COMPONENT_SELECTOR",
+    setMethodName: function() {
+      returnObject = [];
+      for (var event in Blockly.getMainWorkspace().getComponentDatabase().i18nEventNames_) {
+        returnObject.push(event);
+      }
+      return returnObject;
+    },
+    textParameters: ["DO"],
+    textParametersInfo: {
+      "DO": {acornTreeNode:"body", callbackParameters: [{name:"VAR", acornTreeNode: "params", incrementName:true, optional:true, relatedToMutator:"params"}]}
+    },
+    setMethodNameToBlockValues: function() {
+      returnObject = {};
+      for (var event in Blockly.getMainWorkspace().getComponentDatabase().i18nEventNames_) {
+        returnObject[event] = {mutatorNameToValue: {"event_name": event}};
+      }
+      return returnObject;
+    },
+    /*methodNameToBlockValues: {
+      "whenClicked": {mutatorNameToValue: {"event_name": "Click"}},
+      "whenLongClicked": {mutatorNameToValue: {"event_name": "LongClick"}},
+      "whenGotFocus": {mutatorNameToValue: {"event_name": "GotFocus"}},
+      "whenLostFocus": {mutatorNameToValue: {"event_name": "LostFocus"}},
+      "whenTouchDown": {mutatorNameToValue: {"event_name": "TouchDown"}},
+      "whenTouchUp": {mutatorNameToValue: {"event_name": "TouchUp"}}
+    }*/
+  },
+
+  getParametersBTT: function() {
+    var params = [];
+    params.push(new Blockly.ParameterDropdown("COMPONENT_SELECTOR", Blockly.ComponentBlock.createComponentDropDownMenuGenerator(this)));
+    params.push(new Blockly.ParameterStatement("DO"));
+    params.push(new Blockly.ParameterMutator("component_type"));
+    params.push(new Blockly.ParameterMutator("instance_name"));
+    params.push(new Blockly.ParameterMutator("event_name"));
+    return params;
+  },
+  getMutatorNameToInfoObject: function() {
+    return {
+      component_type: {
+        blockVariableName: "typeName",
+        scopeToMutatorValue: function(scope) {
+          return Blockly.getMainWorkspace().getComponentDatabase().instanceNameToTypeName(scope);
+        }
+      },
+      instance_name: {
+        blockVariableName: "instanceName",
+        scopeToMutatorValue: function(scope) {
+          return scope;
+        }
+      },
+      event_name: {
+        blockVariableName: "eventName"
+      }
+    };
+  },
   mutationToDom : function() {
 
     var container = document.createElement('mutation');
@@ -64,7 +123,6 @@ Blockly.Blocks.component_event = {
     }
     return container;
   },
-
   domToMutation : function(xmlElement) {
 
     this.typeName = xmlElement.getAttribute('component_type');
@@ -1027,6 +1085,10 @@ Blockly.ComponentBlock.createComponentDropDown = function(block){
   var componentDropDown = new Blockly.FieldDropdown([["",""]]);
   componentDropDown.menuGenerator_ = function(){ return block.getTopWorkspace().getComponentDatabase().getComponentUidNameMapByType(block.typeName); };
   return componentDropDown;
+};
+
+Blockly.ComponentBlock.createComponentDropDownMenuGenerator = function(block){
+  return function(){ return block.getTopWorkspace().getComponentDatabase().getComponentUidNameMapByType(block.typeName); }
 };
 
 Blockly.ComponentBlock.createClockAddDropDown = function(/*block*/){

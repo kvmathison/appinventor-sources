@@ -64,12 +64,13 @@ bd.acorn.ctr.loadBlockTypes = function() {
         Blockly.window = window // TODO: remove - here for gameblox compatibility
         for (var blockType in Blockly.Blocks) {
             if (Blockly.Blocks[blockType].jsBlockInfo) {
-                if(Blockly.Blocks[blockType].jsBlockInfo.methodName instanceof Blockly.window.Array){
-                    for(var x = 0; x < Blockly.Blocks[blockType].jsBlockInfo.methodName.length; x++){
-                        functionNameToBlockName[Blockly.Blocks[blockType].jsBlockInfo.methodName[x]] = blockType;
+                var blockInfoMethodName = (Blockly.Blocks[blockType].jsBlockInfo.setMethodName != null ? Blockly.Blocks[blockType].jsBlockInfo.setMethodName() : Blockly.Blocks[blockType].jsBlockInfo.methodName);
+                if(blockInfoMethodName instanceof Array){
+                    for(var x = 0; x < blockInfoMethodName.length; x++){
+                        functionNameToBlockName[blockInfoMethodName[x]] = blockType;
                     }
                 } else {
-                    functionNameToBlockName[Blockly.Blocks[blockType].jsBlockInfo.methodName] = blockType;
+                    functionNameToBlockName[blockInfoMethodName] = blockType;
                 }
             }
         }
@@ -329,22 +330,25 @@ bd.acorn.ctr.extractObjectName = function(block) {
  *  @return {String} methodName - method name of the block
  */
 bd.acorn.ctr.extractMethodName = function(block) {
-    var Blockly = (window.Blockly ? window.Blockly : bd.script.ctr.getCurrentBlockly());
-    Blockly.window = window //TODO: remove - here for gameblox compatibility
+    //var Blockly = bd.acorn.ctr.getCurrentBlockly();
+    //Blockly.window = window //TODO: remove - here for gameblox compatibility
     var blockInfo = block.jsBlockInfo;
     var isMethod = false;
 
     // figures out what the method name is, depending on whether it there are multiple method names in jsBlockInfo or just one
-    if (blockInfo.methodName != null){
-        if (blockInfo.methodName instanceof Blockly.window.Array) {
+    var blockInfoMethodName = (blockInfo.setMethodName != null ? blockInfo.setMethodName() : blockInfo.methodName);
+    if (blockInfoMethodName != null ){
+        
+        if (blockInfoMethodName instanceof Array) {
 
-            for (var x = 0; x < blockInfo.methodName.length; x++) {
-                var fieldNameToValueObject = blockInfo.methodNameToBlockValues[blockInfo.methodName[x]].fieldNameToValue;
+            for (var x = 0; x < blockInfoMethodName.length; x++) {
+                var blockInfoMethodNameToBlockValues = (blockInfo.setMethodNameToBlockValues != null ? blockInfo.setMethodNameToBlockValues() : blockInfo.methodNameToBlockValues);
+                var fieldNameToValueObject = blockInfoMethodNameToBlockValues[blockInfoMethodName[x]].fieldNameToValue;
                 
-                if (blockInfo.methodNameToBlockValues[blockInfo.methodName[x]].multipleMutatorNameToValue != null) {
-                    var mutatorNameToValueObject = blockInfo.methodNameToBlockValues[blockInfo.methodName[x]].multipleMutatorNameToValue;
+                if (blockInfoMethodNameToBlockValues[blockInfoMethodName[x]].multipleMutatorNameToValue != null) {
+                    var mutatorNameToValueObject = blockInfoMethodNameToBlockValues[blockInfoMethodName[x]].multipleMutatorNameToValue;
                 } else {
-                    var mutatorNameToValueObject = blockInfo.methodNameToBlockValues[blockInfo.methodName[x]].mutatorNameToValue;
+                    var mutatorNameToValueObject = blockInfoMethodNameToBlockValues[blockInfoMethodName[x]].mutatorNameToValue;
                 }
 
                 var checksForFields = true, checksForMutators = true;
@@ -357,13 +361,21 @@ bd.acorn.ctr.extractMethodName = function(block) {
                     }
                 }
                 if (mutatorNameToValueObject != null) {
-                    if (mutatorNameToValueObject instanceof Blockly.window.Array) {
+                    if (mutatorNameToValueObject instanceof Array) {
                         for (var y = 0; y < mutatorNameToValueObject.length; y++) {
                             checksForMutators = true;
                             for (var mutatorNames in mutatorNameToValueObject[y]) {
-                                if (!(block.mutators[mutatorNames] === mutatorNameToValueObject[y][mutatorNames] || block.mutators[block.getMutatorNameToInfoObject()[mutatorNames].blockVariableName] === mutatorNameToValueObject[y][mutatorNames])) {
-                                    checksForMutators = false;
-                                    break;
+                                if(bd.acorn.ctr.isGameblox) {
+                                    if (!(block.mutators[mutatorNames] === mutatorNameToValueObject[y][mutatorNames] || block.mutators[block.getMutatorNameToInfoObject()[mutatorNames].blockVariableName] === mutatorNameToValueObject[y][mutatorNames])) {
+                                        checksForMutators = false;
+                                        break;
+                                    }
+                                }
+                                else {
+                                    if (!(block[block.getMutatorNameToInfoObject()[mutatorNames].blockVariableName] === mutatorNameToValueObject[y][mutatorNames])) {
+                                        checksForMutators = false;
+                                        break;
+                                    }
                                 }
                             }
                             if (checksForMutators) {
@@ -372,20 +384,28 @@ bd.acorn.ctr.extractMethodName = function(block) {
                         }
                     } else {
                         for (var mutatorNames in mutatorNameToValueObject) {
-                            if (!(block.mutators[mutatorNames] == mutatorNameToValueObject[mutatorNames] || block.mutators[block.getMutatorNameToInfoObject()[mutatorNames].blockVariableName] == mutatorNameToValueObject[mutatorNames])) {
-                                checksForMutators = false;
-                                break;
+                            if(bd.acorn.ctr.isGameblox) {
+                                if (!(block.mutators[mutatorNames] == mutatorNameToValueObject[mutatorNames] || block.mutators[block.getMutatorNameToInfoObject()[mutatorNames].blockVariableName] == mutatorNameToValueObject[mutatorNames])) {
+                                    checksForMutators = false;
+                                    break;
+                                }
+                            }
+                            else {
+                                if (!(block[block.getMutatorNameToInfoObject()[mutatorNames].blockVariableName] == mutatorNameToValueObject[mutatorNames])) {
+                                    checksForMutators = false;
+                                    break;
+                                }
                             }
                         }
                     }
                 }
                 if (checksForFields && checksForMutators) {
-                    methodName = blockInfo.methodName[x];
+                    methodName = blockInfoMethodName[x];
                     break;  // added this break because it seems that it should be right if it reached point...hopefully it is
                 }
             }
         } else {
-            methodName = blockInfo.methodName;
+            methodName = blockInfoMethodName;
             isMethod = true;
         }
     }
@@ -437,12 +457,13 @@ bd.acorn.ctr.createTextParameterArrays = function(block, methodName) {
     //------------------//
 
     var areParameters, argTypes;
-    var whatToTreatAsEntity, methodNameToBlockValues; // is a list
+    var whatToTreatAsEntity; // is a list
+    var blockInfoMethodNameToBlockValues = (blockInfo.setMethodNameToBlockValues != null ? blockInfo.setMethodNameToBlockValues() : blockInfo.methodNameToBlockValues);
 
     // this block of code determines what the text parameters are based on jsBlockInfo
     // if there are overloaded methods, the second if statement block deals with it
-    if (blockInfo.methodNameToBlockValues != null && blockInfo.methodNameToBlockValues[methodName].textParameters != null) {
-        textParameters = blockInfo.methodNameToBlockValues[methodName].textParameters;
+    if (blockInfoMethodNameToBlockValues != null && blockInfoMethodNameToBlockValues[methodName].textParameters != null) {
+        textParameters = blockInfoMethodNameToBlockValues[methodName].textParameters;
         numberOfTextParameters = textParameters.length;
     } else if (blockInfo.overloadedTextParameters != null && blockInfo.textParametersInfo != null) {
 
@@ -512,10 +533,22 @@ bd.acorn.ctr.createTextParameterArrays = function(block, methodName) {
 
                     if (blockInfo.textParametersInfo[attributes].callbackParameters[a].incrementName) {
                         for (var z = 0; (block.getFieldValue(nameOfParameter + z) != null) || (block.getInputTargetBlock(nameOfParameter + z) != null); z++) {
-                            callbackParametersFromTPInfo.push(nameOfParameter + z);
+                            if(callbackParametersFromTPInfo != null) {
+                                callbackParametersFromTPInfo.push(nameOfParameter + z);
+                            }
+                            else {
+                                callbackParametersFromTPInfo = [];
+                                callbackParametersFromTPInfo.push(nameOfParameter + z);
+                            }
                         }
                     } else {
-                        callbackParametersFromTPInfo.push(nameOfParameter);
+                        if(callbackParametersFromTPInfo != null) {
+                            callbackParametersFromTPInfo.push(nameOfParameter);
+                        }
+                        else {
+                            callbackParametersFromTPInfo = [];
+                            callbackParametersFromTPInfo.push(nameOfParameter);
+                        }
                     }
                 }
             }
@@ -596,10 +629,22 @@ bd.acorn.ctr.createTextParameterArrays = function(block, methodName) {
 
                     if (blockInfo.textParametersInfo[attributes].callbackParameters[a].incrementName) {
                         for (var z = 0; (block.getFieldValue(nameOfParameter + z) != null) || (block.getInputTargetBlock(nameOfParameter + z) != null); z++) {
-                            callbackParametersFromTPInfo.push(nameOfParameter + z);
+                            if(callbackParametersFromTPInfo != null) {
+                                callbackParametersFromTPInfo.push(nameOfParameter + z);
+                            }
+                            else {
+                                callbackParametersFromTPInfo = [];
+                                callbackParametersFromTPInfo.push(nameOfParameter + z);
+                            }
                         }
                     } else {
-                        callbackParametersFromTPInfo.push(nameOfParameter);
+                        if(callbackParametersFromTPInfo != null) {
+                            callbackParametersFromTPInfo.push(nameOfParameter);
+                        }
+                        else {
+                            callbackParametersFromTPInfo = [];
+                            callbackParametersFromTPInfo.push(nameOfParameter);
+                        }
                     }
                 }
             }
@@ -641,10 +686,22 @@ bd.acorn.ctr.createTextParameterArrays = function(block, methodName) {
 
                     if (blockInfo.textParametersInfo[attributes].callbackParameters[a].incrementName) {
                         for (var z = 0; (block.getFieldValue(nameOfParameter + z) != null) || (block.getInputTargetBlock(nameOfParameter + z) != null); z++) {
-                            callbackParametersFromTPInfo.push(nameOfParameter + z);
+                            if(callbackParametersFromTPInfo != null) {
+                                callbackParametersFromTPInfo.push(nameOfParameter + z);
+                            }
+                            else {
+                                callbackParametersFromTPInfo = [];
+                                callbackParametersFromTPInfo.push(nameOfParameter + z);
+                            }
                         }
                     } else {
-                        callbackParametersFromTPInfo.push(nameOfParameter);
+                        if(callbackParametersFromTPInfo != null) {
+                            callbackParametersFromTPInfo.push(nameOfParameter);
+                        }
+                        else {
+                            callbackParametersFromTPInfo = [];
+                            callbackParametersFromTPInfo.push(nameOfParameter);
+                        }
                     }
                 }
             }
@@ -673,7 +730,7 @@ bd.acorn.ctr.createTextParameterArrays = function(block, methodName) {
 bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, textParameters, input, methodName) {
     //
     if (block.jsonObject == null) {
-        var parameters = block.getParameters();
+        var parameters = block.getParametersBTT();
     }
     else {
         var parameters = block.jsonObject["args0"];
@@ -694,6 +751,8 @@ bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, t
     var numberOfEdits = returnObject['numberOfEdits'];
     var whatNameNeedToBeEdited = returnObject['whatNameNeedToBeEdited'];
     var haveToEditParameterNames = returnObject['haveToEditParameterNames'];
+
+    var blockInfoMethodNameToBlockValues= (blockInfo.setMethodNameToBlockValues != null ? blockInfo.setMethodNameToBlockValues() : blockInfo.methodNameToBlockValues);
 
 
     // the following if statements extract the literals that will go into the JS version of the block, where the input array holds all the literals
@@ -826,8 +885,8 @@ bd.acorn.ctr.extractJSBlockInfoText = function (block, numberOfTextParameters, t
                 }
 
 
-                if (blockInfo.methodNameToBlockValues != null && blockInfo.methodNameToBlockValues[methodName] != null && blockInfo.methodNameToBlockValues[methodName].evaluateAsEntity != null){
-                    whatToTreatAsEntity = blockInfo.methodNameToBlockValues[methodName].evaluateAsEntity;
+                if (blockInfoMethodNameToBlockValues != null && blockInfoMethodNameToBlockValues[methodName] != null && blockInfoMethodNameToBlockValues[methodName].evaluateAsEntity != null){
+                    whatToTreatAsEntity = blockInfoMethodNameToBlockValues[methodName].evaluateAsEntity;
 
                     if (whatToTreatAsEntity.indexOf(paramName) != -1) {
                         var fieldValue = block.getFieldValue(textParameters[x]);
@@ -1536,10 +1595,10 @@ bd.acorn.ctr.createTree = function(text) {
     dealingWithOverloadedMethodLists(block, parameters, args, Variables, functionName);
 
 
+    var blockInfoMethodNameToBlockValues = (Blockly.Blocks[block.type].jsBlockInfo.setMethodNameToBlockValues != null ? Blockly.Blocks[block.type].jsBlockInfo.setMethodNameToBlockValues() : Blockly.Blocks[block.type].jsBlockInfo.methodNameToBlockValues);
 
-
-    if (Blockly.Blocks[block.type].jsBlockInfo != null && Blockly.Blocks[block.type].jsBlockInfo.methodNameToBlockValues != null) {
-        var methodNameToBlockValues = Blockly.Blocks[block.type].jsBlockInfo.methodNameToBlockValues[functionName];
+    if (Blockly.Blocks[block.type].jsBlockInfo != null && blockInfoMethodNameToBlockValues != null) {
+        var methodNameToBlockValues = blockInfoMethodNameToBlockValues[functionName];
         var importedFromjsBlockInfo = {};
         var whatToTreatAsEntity; // is a list
         var tempParameters = [],
@@ -1633,16 +1692,27 @@ bd.acorn.ctr.createTree = function(text) {
             } else {
                 haveToEditParameterNames = false;
             }
+            if(isObjectFunctionCall && result[x].scopeToMutatorValue != null) {
+                if (block.mutatorNameToValue == null) {
+                    block["mutatorNameToValue"] = {};
+                }
+                block.mutatorNameToValue[x] = result[x].scopeToMutatorValue(entityName);
+            }
 
         }
 
         // new check on jsBlockInfo for the fieldNameToValue when I found out it is not always "ENTITY"
         // the 2 different if statements are needed right now because not everything is "ENTITY" but also not everything has jsBlockInfo yet
         if (isObjectFunctionCall) {
-            if (addMsgPrefix) {
-            	id = "msg:" + entityName;
+
+            if(bd.acorn.ctr.isGameblox) {
+                if (addMsgPrefix) {
+                	id = "msg:" + entityName;
+                } else {
+                	id = "id:" + bd.component.getEntityNameToIdDictionary()[entityName];
+                }
             } else {
-            	id = "id:" + bd.component.getEntityNameToIdDictionary()[entityName];
+                id = entityName;
             }
             
             if (Blockly.Blocks[block.type].jsBlockInfo != null) {
@@ -1650,7 +1720,7 @@ bd.acorn.ctr.createTree = function(text) {
                 if (scope !== "ENTITY") {
                     var isInList = false;
                     if (Blockly.Blocks[block.type].jsonObject == null) {
-                        for (var x in Blockly.Blocks[block.type].getParameters()){
+                        for (var x in Blockly.Blocks[block.type].getParametersBTT()){
                             if (scope === x.name) {
                                 isInList = true;
                                 break;
@@ -1722,10 +1792,15 @@ bd.acorn.ctr.createTree = function(text) {
     if (isObjectFunctionCall) {
 
         if (Blockly.Blocks[block.type].jsBlockInfo != null) {	// && bd.component.getEntityNameToIdDictionary()[entityName] != null
-            if (addMsgPrefix) {
-                id = "msg:" + entityName;
+            
+            if(bd.acorn.ctr.isGameblox) {
+                if (addMsgPrefix) {
+                    id = "msg:" + entityName;
+                } else {
+                    id = "id:" + bd.component.getEntityNameToIdDictionary()[entityName];
+                }
             } else {
-                id = "id:" + bd.component.getEntityNameToIdDictionary()[entityName];
+                id = entityName;
             }
 
             var scope = Blockly.Blocks[block.type].jsBlockInfo.scope;
@@ -1733,9 +1808,9 @@ bd.acorn.ctr.createTree = function(text) {
             // if (scope !== "ENTITY") {
                 var isInList = false;
                 if (Blockly.Blocks[block.type].jsonObject == null) {
-                    for (var x in Blockly.Blocks[block.type].getParameters()) {
+                    for (var x in Blockly.Blocks[block.type].getParametersBTT()) {
                         // debugger;
-                        if (scope === Blockly.Blocks[block.type].getParameters()[x].name) {
+                        if (scope === Blockly.Blocks[block.type].getParametersBTT()[x].name) {
                             isInList = true;
                             break;
                         }
@@ -1803,10 +1878,10 @@ bd.acorn.ctr.createTree = function(text) {
 
             hasBeenAssigned = false;
             if (Blockly.Blocks[block.type].jsonObject == null) {
-                for (var y = 0; y < Blockly.Blocks[block.type].getParameters().length; y++) {
-    	            // check if textParameters (aka parameters inside of the method) has a corresponding thing in getParameters() method and then do a .check to see if is variable
+                for (var y = 0; y < Blockly.Blocks[block.type].getParametersBTT().length; y++) {
+    	            // check if textParameters (aka parameters inside of the method) has a corresponding thing in getParametersBTT() method and then do a .check to see if is variable
     	            // if true, it is an iterator_variable
-                    if (parameters[x] === Blockly.Blocks[block.type].getParameters()[y].name && Blockly.Blocks[block.type].getParameters()[y].check === "Variable") {
+                    if (parameters[x] === Blockly.Blocks[block.type].getParametersBTT()[y].name && Blockly.Blocks[block.type].getParametersBTT()[y].check === "Variable") {
                         inputTemp = typeOfInput(parameters[x], Blockly, Blockly.Blocks[block.type]);
                         input[parameters[x]] = { inputType: inputTemp, blockInfo: { type: "iterator_variable", fieldNameToValue: { "VAR": args[x].value }, mutatorNameToValue: { locked_parent_block_type: functionNameToBlockName[functionName] } } };
                         hasBeenAssigned = true;
@@ -1816,7 +1891,7 @@ bd.acorn.ctr.createTree = function(text) {
             }
             else {
                 for (var y = 0; y < Blockly.Blocks[block.type].jsonObject["args0"].length; y++) {
-                    // check if textParameters (aka parameters inside of the method) has a corresponding thing in getParameters() method and then do a .check to see if is variable
+                    // check if textParameters (aka parameters inside of the method) has a corresponding thing in getParametersBTT() method and then do a .check to see if is variable
                     // if true, it is an iterator_variable
                     if (parameters[x] === Blockly.Blocks[block.type].jsonObject["args0"][y]["name"] && Blockly.Blocks[block.type].jsonObject["args0"][y]["check"] === "Variable") {
                         inputTemp = typeOfInput(parameters[x], Blockly, Blockly.Blocks[block.type]);
@@ -1965,8 +2040,10 @@ function addingFieldNameToValueFromMethodNameToBlockValuesOnJSBlockInfo(block, f
 		goog.mixin(block, importedFromjsBlockInfo);
 	}
 
-    if (Blockly.Blocks[block.type].jsBlockInfo != null && Blockly.Blocks[block.type].jsBlockInfo.methodNameToBlockValues != null) {
-        var methodNameToBlockValues = Blockly.Blocks[block.type].jsBlockInfo.methodNameToBlockValues[functionName];
+    var blockInfoMethodNameToBlockValues = (Blockly.Blocks[block.type].jsBlockInfo.setMethodNameToBlockValues != null ? Blockly.Blocks[block.type].jsBlockInfo.setMethodNameToBlockValues() : Blockly.Blocks[block.type].jsBlockInfo.methodNameToBlockValues);
+
+    if (Blockly.Blocks[block.type].jsBlockInfo != null && blockInfoMethodNameToBlockValues != null) {
+        var methodNameToBlockValues = blockInfoMethodNameToBlockValues[functionName];
         var importedFromjsBlockInfo = {};
         for (var x in methodNameToBlockValues) {
             if (x !== "textParameters" && x !== "evaluateAsEntity") {
@@ -2140,9 +2217,9 @@ function parametersInCallbackFunctionCalls(block, parameters, args, functionName
                             // currently this else statement means if it's not a fieldNameToValue, the input is going to be an iterator_variable
                             // probably need to change a lot of this to become more flexible for the future
                             if (Blockly.Blocks[block.type].jsonObject == null) {
-                                for (var z = 0; z < Blockly.Blocks[block.type].getParameters().length; z++) {
+                                for (var z = 0; z < Blockly.Blocks[block.type].getParametersBTT().length; z++) {
                                     var attributeName = Blockly.Blocks[block.type].jsBlockInfo.textParametersInfo[name].callbackParameters[y].name;
-                                    if (attributeName === Blockly.Blocks[block.type].getParameters()[z].name && Blockly.Blocks[block.type].getParameters()[z].check === "Variable") {
+                                    if (attributeName === Blockly.Blocks[block.type].getParametersBTT()[z].name && Blockly.Blocks[block.type].getParametersBTT()[z].check === "Variable") {
                                         inputTemp = typeOfInput(attributeName, Blockly, Blockly.Blocks[block.type]);
                                         block.input[attributeName + x] = { inputType: inputTemp, blockInfo: { type: "iterator_variable", fieldNameToValue: { "VAR": argumentNode[x].name }, mutatorNameToValue: { locked_parent_block_type: functionNameToBlockName[functionName] } } };
                                         hasBeenAssigned = true;
@@ -2726,7 +2803,7 @@ function mathOperator(expressionNode) {
  */
 function typeOfInput(name, block, blockInfo){
     if (blockInfo.jsonObject == null) {
-        var param = blockInfo.getParameters();
+        var param = blockInfo.getParametersBTT();
     }
     else {
         var param = blockInfo.jsonObject["args0"];
